@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Заявки · Группа Роста</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-apple-system,'Inter',sans-serif;font-size:14px;color:#1e2f3d}
+
+/* ── LAYOUT ── */
+.shell{height:100vh;background:white;display:flex;flex-direction:column;overflow:hidden}
+.hdr{padding:12px 24px;border-bottom:1px solid #e3e9ef;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;height:58px}
+.hdr-logo{font-size:17px;font-weight:700;color:#1e2f3d}
+.hdr-logo span{color:#e63329}
+.hdr-sub{font-size:11px;color:#8c9daf;margin-top:2px}
+.hdr-refresh{font-size:12px;color:#617e98;cursor:pointer;padding:6px 14px;border-radius:20px;border:1px solid #e3eaf2;background:white;transition:.15s}
+.hdr-refresh:hover{background:#f4f7fb}
+
+.body{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;min-height:0}
+.left{border-right:1px solid #edf2f7;display:flex;flex-direction:column;overflow:hidden}
+.right{overflow:hidden;padding:0}
+
+/* ── СПИСОК ── */
+.list-head{padding:14px 14px 8px}
+.list-title{font-weight:600;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.demo-pill{font-size:10px;padding:1px 7px;border-radius:10px;background:#fff8e0;color:#9a6a00;border:1px solid #f5e090;font-weight:600}
+.filters{display:flex;gap:5px;flex-wrap:wrap}
+.f-pill{padding:3px 10px;border-radius:16px;border:1px solid #e3eaf2;font-size:11px;font-weight:500;color:#617e98;cursor:pointer;background:white;transition:.12s}
+.f-pill:hover,.f-pill.on{background:#1e2f3d;color:white;border-color:#1e2f3d}
+
+.plist{flex:1;overflow-y:auto;padding:6px 8px}
+.plist::-webkit-scrollbar{width:3px}
+.plist::-webkit-scrollbar-thumb{background:#d0dce8;border-radius:3px}
+
+.pcard{border-radius:10px;padding:11px 13px;margin-bottom:6px;border:1.5px solid #e7ecf2;cursor:pointer;transition:all .12s;background:white}
+.pcard:hover{border-color:#b8cfe0}
+.pcard.active{border-color:#1e2f3d;background:#fafcfe}
+.pc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.pc-code{font-weight:700;font-size:13px}
+.pc-desc{font-size:11px;color:#4a6375;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.pc-bottom{font-size:11px;color:#7a8fa0;display:flex;gap:10px}
+
+/* ── БЕЙДЖИ СТАТУСА ── */
+.badge{font-size:10px;padding:2px 8px;border-radius:12px;font-weight:700;white-space:nowrap}
+.badge-draft    {background:#f0f3f7;color:#5a7080}
+.badge-clarify  {background:#fff1e0;color:#aa5f2a}
+.badge-calc     {background:#e2f3e8;color:#1a6f4b}
+.badge-sent     {background:#e0eeff;color:#2155a0}
+
+/* ── ПУСТОЕ СОСТОЯНИЕ ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;color:#8c9daf;gap:10px;text-align:center}
+.empty-icon{font-size:44px;opacity:.4}
+.empty-title{font-size:15px;font-weight:600;color:#617e98}
+.empty-sub{font-size:12px;line-height:1.7;max-width:260px}
+
+/* ── ЕДИНАЯ КАРТОЧКА ЗАЯВКИ ── */
+.oc{background:white;border:1px solid #e3eaf2;border-radius:16px;overflow:hidden;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.oc-head{padding:18px 22px 16px;border-bottom:1px solid #f0f3f7}
+.oc-head-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.oc-code{font-size:20px;font-weight:800;color:#1e2f3d;letter-spacing:-.3px}
+.oc-meta{font-size:12px;color:#8c9daf;display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.oc-meta span{display:flex;align-items:center;gap:3px}
+.oc-raw{font-size:12px;color:#617e98;font-style:italic;margin-top:10px;padding:8px 12px;background:#f8f9fb;border-radius:8px;border-left:3px solid #dae2ec}
+
+/* Статус-пайплайн */
+.oc-pipe{display:flex;align-items:center;margin-top:14px}
+.sp-step{font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;border:1.5px solid #e3eaf2;color:#aab8c6;background:white;white-space:nowrap}
+.sp-step.done{color:#2155a0;background:#eef4ff;border-color:#c5d8ed}
+.sp-step.active{background:#1e2f3d;color:white;border-color:#1e2f3d}
+.sp-line{flex:1;height:2px;background:#e3eaf2;margin:0 3px;min-width:6px}
+.sp-line.done{background:#c5d8ed}
+
+/* Секции */
+.oc-sec{padding:16px 22px;border-bottom:1px solid #f0f3f7}
+.oc-sec-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#b0bec8;margin-bottom:10px}
+.oc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px}
+.oc-row-k{color:#8c9daf}
+.oc-row-v{font-weight:600;color:#1e2f3d;text-align:right}
+.oc-miss{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.oc-miss-tag{font-size:11px;padding:3px 10px;border-radius:20px;background:#fff3e8;color:#c07030;border:1px solid #ffd4a8;font-weight:500}
+.oc-progress{height:4px;background:#edf2f7;border-radius:4px;overflow:hidden;margin-top:12px}
+.oc-progress-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,#4ade80,#16a34a);transition:.3s}
+
+/* Итог */
+.oc-total{padding:16px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f0f3f7}
+.oc-total-label{font-size:14px;font-weight:600;color:#617e98}
+.oc-total-price{font-size:30px;font-weight:800;color:#1a6f4b;letter-spacing:-.5px}
+
+/* Действия */
+.oc-actions{padding:14px 22px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{padding:9px 18px;border-radius:24px;border:1.5px solid #cddae8;background:white;font-size:13px;font-weight:500;color:#1e2f3d;cursor:pointer;transition:.12s;white-space:nowrap}
+.btn:hover{background:#f4f7fb;border-color:#aabdcc}
+.btn.primary{background:#1e2f3d;color:white;border-color:#1e2f3d}
+.btn.primary:hover{background:#2d4460}
+.btn-recalc{padding:9px 18px;border-radius:24px;border:1.5px solid #e3eaf2;background:#f8f9fb;font-size:13px;font-weight:500;color:#617e98;cursor:pointer;transition:.12s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn-recalc:hover{background:#edf2f7;color:#1e2f3d}
+.btn-recalc:disabled{opacity:.5;cursor:not-allowed}
+
+/* Статус карточки */
+.card-sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.est-sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#617e98;margin-bottom:12px}
+
+/* ── MISC ── */
+.spinner{width:14px;height:14px;border:2px solid #e1e9f1;border-top-color:#3b5e7a;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ФОРМА НОВОЙ ЗАЯВКИ ── */
+.np-btn{margin:10px 14px 2px;padding:9px;border-radius:10px;border:1.5px dashed #c8d8e8;background:#f5f8fb;font-size:13px;font-weight:500;color:#4a6f8a;cursor:pointer;text-align:center;transition:.12s;width:calc(100% - 28px);display:block}
+.np-btn:hover{background:#e8f0f8;border-color:#9ab5cc;color:#1e2f3d}
+/* overlay + modal */
+.np-ov{display:none;position:fixed;inset:0;background:rgba(10,20,34,.55);z-index:900;align-items:center;justify-content:center}
+.np-ov.open{display:flex}
+.np-modal{background:#fff;border-radius:0;width:100vw;height:100vh;box-shadow:none;display:flex;flex-direction:column;overflow:hidden}
+/* header */
+.np-hdr{padding:18px 24px 14px;border-bottom:1px solid #edf2f7;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.np-hdr h3{font-size:16px;font-weight:700;color:#1e2f3d;margin:0}
+.np-hdr-x{width:30px;height:30px;border-radius:50%;border:none;background:#f0f3f7;color:#617e98;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.12s}
+.np-hdr-x:hover{background:#e0e8f0;color:#1e2f3d}
+/* two columns */
+.np-cols{display:flex;flex:1;overflow:hidden;min-height:0}
+.np-left{width:360px;flex-shrink:0;border-right:1px solid #edf2f7;display:flex;flex-direction:column;overflow-y:auto;padding:18px 20px;gap:12px}
+.np-left::-webkit-scrollbar{width:3px}.np-left::-webkit-scrollbar-thumb{background:#d0dce8;border-radius:3px}
+.np-right{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#f7f9fc}
+/* left form elements */
+.nf-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#8c9daf;margin-bottom:3px}
+.nf-inp{padding:9px 12px;border:1.5px solid #e3eaf2;border-radius:9px;font-size:13px;color:#1e2f3d;outline:none;font-family:inherit;transition:.15s;background:#fff;width:100%;box-sizing:border-box}
+.nf-inp:focus{border-color:#9ab5cc}
+.nf-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nf-group{display:flex;flex-direction:column;gap:3px}
+.nf-sep{border:none;border-top:1px solid #edf2f7;margin:4px 0}
+.nf-pt{display:flex;gap:6px}
+.nf-pt-opt{flex:1;padding:8px;border:1.5px solid #e3eaf2;border-radius:8px;font-size:12px;font-weight:600;color:#617e98;cursor:pointer;text-align:center;transition:.12s;background:#fff;user-select:none}
+.nf-pt-opt.on{border-color:#1e2f3d;background:#1e2f3d;color:#fff}
+.nf-err{font-size:12px;color:#c0392b;padding:7px 11px;background:#fef0f0;border-radius:8px;border:1px solid #f5c6cb;display:none}
+.np-sw{position:relative}
+.np-sw-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid #9ab5cc;border-radius:9px;max-height:260px;overflow-y:auto;z-index:2000;display:none;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.np-sw-list.open{display:block}
+.np-sw-item{padding:9px 12px;font-size:13px;color:#1e2f3d;cursor:pointer;border-radius:7px;margin:2px 3px}
+.np-sw-item:hover,.np-sw-item.active{background:#eef4fa;color:#1e2f3d}
+.np-sw-item.np-sw-empty{color:#8c9daf;cursor:default}
+.np-sw-item.np-sw-empty:hover{background:none}
+.nf-err.on{display:block}
+.nf-hint{font-size:10px;color:#9ab0c4;margin-top:2px}
+/* right: price card */
+.np-price-card{flex-shrink:0;padding:14px 18px;background:#fff;border-bottom:1px solid #edf2f7;display:none}
+.np-price-big{font-size:28px;font-weight:800;color:#1a6f4b;line-height:1}
+.np-price-meta{font-size:11px;color:#8c9daf;margin-top:4px}
+/* right: matrix */
+.np-matrix-wrap{flex:1;overflow-y:auto;padding:14px 16px}
+.np-matrix-wrap::-webkit-scrollbar{width:3px}.np-matrix-wrap::-webkit-scrollbar-thumb{background:#d0dce8;border-radius:3px}
+.np-hint-idle{padding:60px 20px;text-align:center;color:#b0bec8;font-size:13px;line-height:1.7}
+/* matrix table */
+.mx-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:16px}
+.mx-table thead th{background:#1e2f3d;color:#fff;padding:6px 8px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.mx-table thead th:first-child{text-align:left;border-radius:6px 0 0 0}
+.mx-table thead th:last-child{border-radius:0 6px 0 0}
+.mx-table thead th.r{text-align:right}
+.mx-cat td{background:#dce8f4;color:#2d5f8a;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:5px 8px;border-top:1px solid #c8ddf0}
+.mx-row td{padding:4px 8px;border-bottom:1px solid #f0f3f7;vertical-align:middle;color:#2d3e4f}
+.mx-row:hover td{background:#f5f8fd}
+.mx-row td.mx-name{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#2d3e4f}
+.mx-row td.mx-r{text-align:right;white-space:nowrap;color:#617e98}
+.mx-row td.mx-cost{text-align:right;white-space:nowrap;font-weight:600;color:#1e2f3d}
+.mx-qty{width:62px;border:1.5px solid #dce8f4;border-radius:5px;padding:3px 6px;font-size:11px;text-align:right;color:#1e2f3d;font-family:inherit;background:#fff;outline:none;box-sizing:border-box}
+.mx-qty:focus{border-color:#4a90d9;background:#f0f8ff}
+/* totals */
+.mx-sub td{border-top:2px solid #e0e8f2;padding:6px 8px;font-weight:600;color:#617e98;font-size:11px}
+.mx-sub td.mx-r{text-align:right}
+.mx-labor td{padding:5px 8px;color:#3d5166;font-size:11px;background:#fafbfd}
+.mx-labor td.mx-r{text-align:right}
+.mx-labor-inp{width:90px;border:1.5px solid #dce8f4;border-radius:5px;padding:3px 7px;font-size:11px;text-align:right;font-family:inherit;color:#1e2f3d;outline:none}
+.mx-labor-inp:focus{border-color:#4a90d9}
+.mx-total td{border-top:3px solid #1e2f3d;padding:8px 8px;font-weight:800;font-size:14px;color:#1e2f3d}
+.mx-total td.mx-r{text-align:right;color:#1a6f4b}
+/* accessories */
+.mx-acc-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#8c9daf;margin:4px 0 8px}
+.mx-acc-list{display:flex;flex-direction:column;gap:5px}
+.mx-acc-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1.5px solid #edf2f7;border-radius:8px;cursor:pointer;transition:.12s;font-size:12px;background:#fff}
+.mx-acc-item:hover{border-color:#b0c8e0}
+.mx-acc-item.on{border-color:#1e2f3d;background:#f5f8fc}
+.mx-acc-cb{width:15px;height:15px;border-radius:3px;border:2px solid #c0d0e0;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px;transition:.12s}
+.mx-acc-item.on .mx-acc-cb{background:#1e2f3d;border-color:#1e2f3d;color:#fff}
+.mx-acc-name{flex:1;color:#1e2f3d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mx-acc-price{color:#617e98;white-space:nowrap}
+/* footer */
+.np-ftr{padding:14px 20px;border-top:1px solid #edf2f7;display:flex;gap:10px;flex-shrink:0;background:#fff}
+.np-footer{padding:16px 24px;border-top:1px solid #f0f3f7;display:flex;gap:10px;flex-shrink:0}
+.two-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.tab-view{display:none!important}.tab-view.active{display:grid!important}
+.tab-view.active.lk-body{grid-template-columns:300px 1fr}
+/* ── HDR TABS ── */
+.hdr-tabs{display:flex;gap:4px;background:#f0f3f7;padding:4px;border-radius:12px}
+.hdr-tab{padding:7px 18px;border-radius:8px;border:none;background:transparent;font-size:13px;font-weight:500;color:#617e98;cursor:pointer;transition:.12s;white-space:nowrap}
+.hdr-tab.active{background:white;color:#1e2f3d;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.hdr-tab:hover:not(.active){color:#1e2f3d}
+
+/* ── SPLIT LAYOUT правой панели ── */
+.detail-split{display:grid;grid-template-columns:1fr 360px;height:100%;overflow:hidden}
+.detail-left{overflow-y:auto;padding:20px 22px}
+.detail-left::-webkit-scrollbar{width:4px}
+.detail-left::-webkit-scrollbar-thumb{background:#d0dce8;border-radius:4px}
+.detail-right{display:flex;flex-direction:column;border-left:1px solid #e3eaf2;background:white;overflow:hidden}
+.ichat-hdr{padding:16px 20px 12px;border-bottom:1px solid #f0f3f7;flex-shrink:0}
+.ichat-hdr-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#b0bec8}
+.ichat-hdr-sub{font-size:12px;color:#8c9daf;margin-top:3px}
+.ichat-msgs{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:white}
+.ichat-msgs::-webkit-scrollbar{width:3px}
+.ichat-msgs::-webkit-scrollbar-thumb{background:#e0e6ed;border-radius:4px}
+.ichat-bar{padding:10px 14px;background:white;border-top:1px solid #f0f3f7;display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
+.ichat-bar textarea{flex:1;padding:9px 13px;border:1.5px solid #e3eaf2;border-radius:20px;font-size:13px;outline:none;font-family:inherit;color:#1e2f3d;resize:none;max-height:100px;min-height:38px;line-height:1.4;transition:.15s;background:#f8f9fb}
+.ichat-bar textarea:focus{border-color:#b0c8e0;background:white}
+.ichat-send{width:36px;height:36px;border-radius:50%;background:#1e2f3d;border:none;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
+.ichat-send:hover{background:#2d4460}
+.ichat-send:disabled{opacity:.45;cursor:not-allowed}
+.ichat-empty{text-align:center;color:#b0bec8;font-size:12px;padding:40px 0}
+
+/* ── ЛК КЛИЕНТА ── */
+.lk-body{grid-template-columns:300px 1fr;flex:1;overflow:hidden;min-height:0}
+.lk-left{border-right:1px solid #edf2f7;display:flex;flex-direction:column;background:#fafbfc;overflow:hidden}
+.lk-right{overflow-y:auto;background:white}
+
+/* LK — логин */
+.lk-login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 120px);padding:40px;text-align:center;background:white}
+.lk-login-icon{font-size:52px;margin-bottom:16px}
+.lk-login h2{font-size:20px;font-weight:700;color:#1e2f3d;margin-bottom:6px}
+.lk-login p{font-size:13px;color:#617e98;margin-bottom:24px;line-height:1.6}
+.lk-login-form{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px}
+.lk-inp{padding:13px 16px;border:1.5px solid #dae2ec;border-radius:12px;font-size:15px;outline:none;font-family:inherit;color:#1e2f3d;transition:.15s;width:100%}
+.lk-inp:focus{border-color:#9ab0c4}
+.lk-btn-enter{padding:14px;border-radius:12px;border:none;background:#1e2f3d;color:white;font-size:15px;font-weight:600;cursor:pointer;transition:.15s;width:100%}
+.lk-btn-enter:hover{background:#2d4460}
+
+/* LK — список заказов */
+.lk-list-head{padding:16px 14px 10px;border-bottom:1px solid #edf2f7}
+.lk-client-name{font-weight:700;font-size:14px;color:#1e2f3d;margin-bottom:2px}
+.lk-client-phone{font-size:12px;color:#617e98}
+.lk-logout{font-size:11px;color:#aab8c6;cursor:pointer;margin-top:6px;display:inline-block}
+.lk-logout:hover{color:#e63329}
+.lk-order-list{flex:1;overflow-y:auto;padding:8px}
+.lk-order-list::-webkit-scrollbar{width:3px}
+.lk-order-list::-webkit-scrollbar-thumb{background:#d0dce8;border-radius:3px}
+.lk-ocard{border-radius:10px;padding:12px 13px;margin-bottom:6px;border:1.5px solid #e7ecf2;cursor:pointer;transition:all .12s;background:white}
+.lk-ocard:hover{border-color:#b8cfe0}
+.lk-ocard.active{border-color:#1e2f3d;background:#fafcfe}
+.lk-oc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.lk-oc-code{font-weight:700;font-size:13px}
+.lk-oc-desc{font-size:12px;color:#4a6375;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lk-oc-date{font-size:11px;color:#8c9daf}
+.lk-new-order{margin:8px;padding:11px;border-radius:10px;border:1.5px dashed #cddae8;background:#f9fbfd;font-size:13px;color:#617e98;cursor:pointer;text-align:center;transition:.12s}
+.lk-new-order:hover{background:#f0f4f9;color:#1e2f3d}
+
+/* LK — детали заказа + чат */
+.lk-detail{display:flex;flex-direction:column;height:100%}
+.lk-order-info{padding:20px 22px 14px;border-bottom:1px solid #edf2f7}
+.lk-oi-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.lk-oi-code{font-size:17px;font-weight:700;color:#1e2f3d}
+.lk-oi-meta{font-size:12px;color:#617e98;line-height:1.7;margin-top:3px}
+.lk-oi-desc{font-size:13px;color:#4a6375;background:#f5f7fa;border-radius:8px;padding:9px 12px;margin-top:8px;line-height:1.5;font-style:italic}
+
+/* LK — статус в ЛК */
+.lk-status-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+.lk-st-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.lk-st-dot.draft{background:#94a3b8}
+.lk-st-dot.clarifying{background:#fb923c}
+.lk-st-dot.calculated{background:#22c55e}
+.lk-st-dot.sent{background:#3b82f6}
+.lk-st-text{font-size:13px;font-weight:600;color:#1e2f3d}
+.lk-st-hint{font-size:12px;color:#617e98}
+
+/* LK — смета в ЛК */
+.lk-estimate{margin:0 22px 0;padding:14px 16px;background:#f0fdf4;border-radius:12px;border:1.5px solid #bbf7d0}
+.lk-est-title{font-size:12px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+.lk-est-row{display:flex;justify-content:space-between;font-size:13px;color:#4a6375;padding:4px 0}
+.lk-est-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;padding-top:10px;border-top:2px solid #bbf7d0}
+.lk-est-total-label{font-size:14px;font-weight:600;color:#15803d}
+.lk-est-total-price{font-size:24px;font-weight:800;color:#15803d}
+
+/* LK — чат */
+.lk-chat-wrap{flex:1;display:flex;flex-direction:column;padding:0 22px;overflow:hidden}
+.lk-chat-title{font-size:12px;font-weight:700;color:#617e98;text-transform:uppercase;letter-spacing:.4px;padding:14px 0 10px}
+.lk-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-bottom:14px}
+.lk-msgs::-webkit-scrollbar{width:3px}
+.lk-msgs::-webkit-scrollbar-thumb{background:#d0dce8;border-radius:3px}
+
+.lk-msg{display:flex;gap:8px;align-items:flex-end}
+.lk-msg.me{flex-direction:row-reverse}
+.lk-ava{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.lk-ava.mgr{background:#e5ecf3;color:#3b5e7a}
+.lk-ava.cli{background:#1e2f3d;color:white}
+.lk-bbl{padding:10px 14px;border-radius:14px;max-width:78%;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.lk-bbl.mgr{background:#f3f4f6;color:#1e2f3d;border:1px solid #e5e7eb}
+.lk-bbl.cli{background:#1e2f3d;color:white}
+.lk-msg-time{font-size:10px;color:#9ca3af;margin-top:3px}
+.lk-msg.me .lk-msg-time{text-align:right;color:rgba(255,255,255,.45)}
+.lk-msg-sender{font-size:10px;font-weight:600;color:#617e98;margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.tg-badge{display:inline-flex;align-items:center;flex-shrink:0}
+.lk-msg.me .lk-msg-sender{text-align:right;color:rgba(255,255,255,.5)}
+
+.lk-inp-row{display:flex;gap:8px;padding:12px 0 0;border-top:1px solid #edf2f7;margin-top:4px}
+.lk-inp-row textarea{flex:1;padding:10px 14px;border:1.5px solid #dae2ec;border-radius:10px;font-size:13px;outline:none;font-family:inherit;color:#1e2f3d;resize:none;height:44px;transition:.15s;line-height:1.4}
+.lk-inp-row textarea:focus{border-color:#9ab0c4}
+.lk-send{padding:10px 18px;border-radius:10px;border:none;background:#1e2f3d;color:white;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;align-self:flex-end;transition:.15s}
+.lk-send:hover{background:#2d4460}
+.lk-send:disabled{opacity:.4;cursor:not-allowed}
+
+/* LK — пустой чат */
+.lk-no-order{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;text-align:center;color:#8c9daf}
+
+/* Manager reply input */
+.mgr-reply{display:flex;gap:8px;margin-top:6px}
+.mgr-reply input{flex:1;padding:10px 14px;border:1.5px solid #dae2ec;border-radius:10px;font-size:13px;outline:none;font-family:inherit;color:#1e2f3d;transition:.15s}
+.mgr-reply input:focus{border-color:#9ab0c4}
+.mgr-reply button{padding:10px 16px;border-radius:10px;border:none;background:#2d4460;color:white;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+
+/* LK — новая заявка модалка */
+.lk-new-form{padding:22px;border-top:1px solid #edf2f7;background:#fafbfc}
+.lk-new-form textarea{width:100%;padding:11px 14px;border:1.5px solid #dae2ec;border-radius:10px;font-size:13px;outline:none;font-family:inherit;color:#1e2f3d;resize:none;height:80px;margin-bottom:8px;transition:.15s}
+.lk-new-form textarea:focus{border-color:#9ab0c4}
+
+
+@media(max-width:860px){
+  .body,.lk-body{grid-template-columns:1fr}
+  .left,.lk-left{border-right:none;border-bottom:1px solid #edf2f7;max-height:260px}
+  .two-cards{grid-template-columns:1fr}
+  .shell{margin:8px}
+}
+
+/* ── CHAT MODAL ── */
+.chat-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.chat-overlay.open{opacity:1;pointer-events:all}
+.chat-win{width:min(680px,96vw);height:82vh;background:white;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.3);transform:translateY(24px);transition:transform .2s}
+.chat-overlay.open .chat-win{transform:translateY(0)}
+.cw-hdr{background:#1e2f3d;color:white;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cw-hdr-info{}
+.cw-hdr-title{font-weight:700;font-size:15px}
+.cw-hdr-sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px}
+.cw-close{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:white;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:.15s}
+.cw-close:hover{background:rgba(255,255,255,.22)}
+.cw-msgs{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:6px;background:#dfe3e8}
+.cw-msgs::-webkit-scrollbar{width:4px}
+.cw-msgs::-webkit-scrollbar-thumb{background:#b8c4ce;border-radius:4px}
+.cw-bubble{display:flex;flex-direction:column;max-width:74%}
+.cw-bubble.out{align-self:flex-end;align-items:flex-end}
+.cw-bubble.in{align-self:flex-start;align-items:flex-start}
+.cw-text{padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.cw-bubble.out .cw-text{background:#1e2f3d;color:white;border-bottom-right-radius:4px}
+.cw-bubble.in .cw-text{background:#f0f3f7;color:#1e2f3d;border-bottom-left-radius:4px}
+.cw-time{font-size:10px;color:#b0bec8;margin-top:3px;display:flex;align-items:center;gap:4px}
+.cw-bubble.out .cw-time{color:#9ab0c4}
+.cw-bar{padding:10px 14px;background:white;border-top:1px solid #e5eaef;display:flex;gap:10px;align-items:flex-end;flex-shrink:0}
+.cw-bar textarea{flex:1;padding:10px 14px;border:1.5px solid #dae2ec;border-radius:22px;font-size:13px;outline:none;font-family:inherit;color:#1e2f3d;resize:none;max-height:110px;min-height:42px;line-height:1.45;transition:.15s;overflow-y:auto}
+.cw-bar textarea:focus{border-color:#2AABEE}
+.cw-send{width:42px;height:42px;border-radius:50%;background:#2AABEE;border:none;color:white;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
+.cw-send:hover{background:#1f9fd6}
+.cw-send:disabled{opacity:.45;cursor:not-allowed}
+.cw-empty{text-align:center;color:#8a9dac;font-size:12px;padding:30px 0}
+.chat-open-btn{display:flex;align-items:center;gap:8px;width:100%;padding:11px 16px;border-radius:10px;border:1.5px solid #c8daea;background:#f4f9fd;font-size:13px;font-weight:600;color:#1a4d72;cursor:pointer;margin-bottom:10px;transition:.12s}
+.chat-open-btn:hover{background:#e8f3fb;border-color:#2AABEE}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="hdr">
+    <div>
+      <div class="hdr-logo">ГРУППА <span>РОСТА</span></div>
+      <div class="hdr-sub">лабораторная мебель от производителя</div>
+    </div>
+    <div class="hdr-tabs">
+      <button class="hdr-tab active" onclick="switchView('manager',this)">📋 Менеджер</button>
+      <button class="hdr-tab" onclick="switchView('lk',this)">🏠 ЛК Клиента</button>
+    </div>
+    <button class="hdr-refresh" onclick="loadProjects()">⟳ Обновить</button>
+  </div>
+
+  <!-- ══ ВИД: МЕНЕДЖЕР ══ -->
+  <div id="view-manager" class="tab-view active body">
+
+    <div class="left">
+      <div class="list-head">
+        <div class="list-title">
+          Заявки
+        </div>
+        <div class="filters">
+          <div class="f-pill on" onclick="setFilter('all',this)">Все</div>
+          <div class="f-pill" onclick="setFilter('draft',this)">Новые</div>
+          <div class="f-pill" onclick="setFilter('clarifying',this)">Уточнение</div>
+          <div class="f-pill" onclick="setFilter('calculated',this)">Готово</div>
+          <div class="f-pill" onclick="setFilter('sent',this)">Отправлено</div>
+        </div>
+        <button class="np-btn" onclick="openNP()">+ Новая заявка</button>
+      </div>
+      <div class="plist" id="plist">
+        <div style="display:flex;align-items:center;gap:8px;color:#8c9daf;font-size:13px;padding:16px 6px">
+          <div class="spinner"></div> Загрузка…
+        </div>
+      </div>
+    </div>
+
+    <div class="right" id="right">
+      <div class="empty">
+        <div class="empty-icon">📋</div>
+        <div class="empty-title">Выберите заявку</div>
+        <div class="empty-sub">Нажмите на заявку слева, чтобы увидеть все детали</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ ВИД: ЛК КЛИЕНТА ══ -->
+  <div id="view-lk" class="tab-view lk-body">
+
+    <!-- LK: логин или список -->
+    <div class="lk-left" id="lk-left">
+      <div id="lk-login-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px;text-align:center">
+        <div style="font-size:36px;margin-bottom:12px">👤</div>
+        <div style="font-weight:700;font-size:15px;color:#1e2f3d;margin-bottom:6px">Войти в личный кабинет</div>
+        <div style="font-size:12px;color:#617e98;margin-bottom:18px;line-height:1.6">Введите телефон, который указывали при заявке</div>
+        <input type="tel" id="lk-phone-inp" class="lk-inp" placeholder="+7 (900) 000-00-00" style="margin-bottom:8px;text-align:center">
+        <button class="lk-btn-enter" onclick="lkLogin()">Войти</button>
+      </div>
+      <div id="lk-orders-screen" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+        <div class="lk-list-head">
+          <div class="lk-client-name" id="lk-client-name">—</div>
+          <div class="lk-client-phone" id="lk-client-phone">—</div>
+          <span class="lk-logout" onclick="lkLogout()">← Выйти</span>
+        </div>
+        <div class="lk-order-list" id="lk-order-list"></div>
+        <div class="lk-new-order" onclick="lkNewOrder()">+ Новая заявка</div>
+      </div>
+    </div>
+
+    <!-- LK: правая часть -->
+    <div class="lk-right" id="lk-right">
+      <div class="lk-no-order">
+        <div style="font-size:40px;margin-bottom:12px;opacity:.4">💬</div>
+        <div style="font-weight:600;font-size:15px;color:#617e98">Войдите и выберите заказ</div>
+        <div style="font-size:12px;margin-top:6px;max-width:220px;line-height:1.7">Здесь будет чат с менеджером и статус вашего заказа</div>
+      </div>
+    </div>
+
+  </div>
+
+
+</div>
+
+<!-- ══ ФОРМА НОВОЙ ЗАЯВКИ ══ -->
+<div id="np-overlay" class="np-ov">
+  <div class="np-modal">
+    <div class="np-hdr">
+      <h3>Новая заявка</h3>
+      <button class="np-hdr-x" onclick="closeNP()">×</button>
+    </div>
+    <div class="np-cols">
+    <!-- ─── ЛЕВАЯ КОЛОНКА: форма ─── -->
+    <div class="np-left">
+      <!-- Серия -->
+      <div class="nf-group">
+        <div class="nf-label">Серия *</div>
+        <div class="np-sw" id="np-sw-wrap">
+          <input type="text" id="np-series-search" class="nf-inp" placeholder="— выберите позицию —"
+                 autocomplete="off" oninput="npSwFilter()" onfocus="npSwOpen()"
+                 onclick="npSwToggle()" style="cursor:text">
+          <input type="hidden" id="np-series" value="">
+          <div class="np-sw-list" id="np-sw-list"></div>
+        </div>
+      </div>
+      <!-- Ширина + Глубина -->
+      <div class="nf-row2">
+        <div class="nf-group">
+          <div class="nf-label">Ширина, мм *</div>
+          <input type="number" id="np-width" class="nf-inp" placeholder="напр. 1200" min="100" max="4000" oninput="npAutoCalc()">
+          <div id="np-width-hint" class="nf-hint"></div>
+        </div>
+        <div class="nf-group" id="np-depth-wrap">
+          <div class="nf-label">Глубина, мм *</div>
+          <input type="number" id="np-depth" class="nf-inp" placeholder="напр. 600" min="100" max="2000" oninput="npAutoCalc()">
+          <div id="np-depth-hint" class="nf-hint"></div>
+        </div>
+      </div>
+      <!-- Материал -->
+      <div class="nf-group" id="np-mat-wrap">
+        <div class="nf-label">Материал поверхности *</div>
+        <select id="np-mat" class="nf-inp" onchange="npAutoCalcNow()">
+          <option value="">— сначала выберите позицию —</option>
+        </select>
+      </div>
+      <!-- Доп. параметр (виброизоляция и т.п.) -->
+      <div class="nf-group" id="np-vib-wrap" style="display:none">
+        <div class="nf-label" id="np-vib-label">Виброизоляция, мм *</div>
+        <select id="np-vib" class="nf-inp" onchange="npAutoCalcNow()">
+        </select>
+      </div>
+      <!-- Количество + Тип цены -->
+      <div class="nf-row2">
+        <div class="nf-group">
+          <div class="nf-label">Количество</div>
+          <input type="number" id="np-qty" class="nf-inp" value="1" min="1" oninput="npQtyChange()">
+        </div>
+        <div class="nf-group">
+          <div class="nf-label">Тип цены</div>
+          <div class="nf-pt">
+            <div class="nf-pt-opt on" id="np-pt-retail" onclick="npSelPrice('retail')">Розница</div>
+            <div class="nf-pt-opt" id="np-pt-wholesale" onclick="npSelPrice('wholesale')">Опт</div>
+          </div>
+        </div>
+      </div>
+      <hr class="nf-sep">
+      <!-- Клиент -->
+      <div class="nf-group">
+        <div class="nf-label">Имя клиента</div>
+        <input type="text" id="np-client-name" class="nf-inp" placeholder="Иванов Иван">
+      </div>
+      <div class="nf-row2">
+        <div class="nf-group">
+          <div class="nf-label">Телефон</div>
+          <input type="tel" id="np-client-phone" class="nf-inp" placeholder="+7 900 000-00-00">
+        </div>
+        <div class="nf-group">
+          <div class="nf-label">Email</div>
+          <input type="email" id="np-client-email" class="nf-inp" placeholder="mail@example.com">
+        </div>
+      </div>
+      <hr class="nf-sep">
+      <div class="nf-group">
+        <div class="nf-label">Менеджер</div>
+        <input type="text" id="np-manager" class="nf-inp" placeholder="Имя менеджера">
+      </div>
+      <div class="nf-group">
+        <div class="nf-label">Примечание</div>
+        <textarea id="np-notes" class="nf-inp" rows="2" style="resize:none" placeholder="Дополнительно..."></textarea>
+      </div>
+      <div id="np-err" class="nf-err"></div>
+    </div><!-- /np-left -->
+
+    <!-- ─── ПРАВАЯ КОЛОНКА: результат + матрица ─── -->
+    <div class="np-right">
+      <!-- Цена (появляется после расчёта) -->
+      <div id="np-price-card" class="np-price-card">
+        <div class="np-price-big" id="np-price-val">—</div>
+        <div class="np-price-meta" id="np-price-meta"></div>
+      </div>
+
+      <!-- Скроллируемая область: хинт / матрица / допы -->
+      <div class="np-matrix-wrap" id="np-matrix-wrap">
+        <div class="np-hint-idle" id="np-idle-hint">
+          Выберите серию и ширину —<br>цена и матрица обновятся автоматически
+        </div>
+
+        <!-- Матрица себестоимости -->
+        <div id="np-mx-block" style="display:none">
+          <table class="mx-table">
+            <thead>
+              <tr>
+                <th style="text-align:left;width:38%">Наименование</th>
+                <th class="r">Ед.</th>
+                <th class="r">Кол-во</th>
+                <th class="r">₽/ед.</th>
+                <th class="r">Стоимость</th>
+              </tr>
+            </thead>
+            <tbody id="np-mx-body"></tbody>
+            <tfoot>
+              <tr class="mx-sub">
+                <td colspan="4">Итого материалы</td>
+                <td class="mx-r" id="mx-mat-total">—</td>
+              </tr>
+              <tr class="mx-labor">
+                <td colspan="4">Работы</td>
+                <td class="mx-r"><input type="number" id="mx-labor" class="mx-labor-inp" placeholder="0" min="0" oninput="npMxRecalc()"></td>
+              </tr>
+              <tr class="mx-total">
+                <td colspan="4">ИТОГО себестоимость</td>
+                <td class="mx-r" id="mx-grand">—</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Допы -->
+        <div id="np-acc-block" style="display:none;margin-top:16px">
+          <div class="mx-acc-title">Комплектующие (допы)</div>
+          <div class="mx-acc-list" id="np-acc-list"></div>
+          <div id="np-acc-total" style="font-size:11px;color:#617e98;margin-top:6px;text-align:right;font-weight:600"></div>
+        </div>
+      </div>
+    </div><!-- /np-right -->
+    </div><!-- /np-cols -->
+
+    <div class="np-ftr">
+      <button class="btn" onclick="closeNP()">Отмена</button>
+      <button class="btn" id="np-calc-btn" onclick="npCalc(true)" style="flex:1">Обновить расчёт</button>
+      <button class="btn primary" id="np-save-btn" onclick="npSave()" style="flex:1" disabled>Создать заявку</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ CONFIG ════════════════════════════════
+const SB_URL = 'https://uzijscrcqmtpkvyiewok.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6aWpzY3JjcW10cGt2eWlld29rIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI2NDUxNiwiZXhwIjoyMDg5ODQwNTE2fQ.53FP7qfAO4q5r22i5SKORqWCw6fSOqXW_vZGXxmYoMA';
+
+// ═══ СПРАВОЧНИКИ ═══════════════════════════
+const MAT_NAME = {
+  KRG:'Керамогранит (КРГ)', KRM:'Монолитная керамика (КРМ)',
+  PLS:'Пластик Слопласт (ПЛС)', PLS_LAB:'ПЛС-ЛАБ',
+  METAL:'Металл', INDUSTRIAL:'Промышленное исполнение',
+  LDSP:'ЛДСП', PLP:'Полипропилен (ПЛП)', GRANITE:'Гранит'
+};
+const PARAM_LABEL = {
+  series:'Серия', width_mm:'Ширина, мм', depth_mm:'Глубина, мм',
+  material_code:'Поверхность', quantity:'Количество', price_type:'Тип цены',
+  vibration_class:'Виброизоляция'
+};
+const MISS_LABEL = {
+  series:'Серия стола', width_mm:'Ширина (мм)', depth_mm:'Глубина (мм)',
+  material_code:'Материал поверхности', quantity:'Количество', price_type:'Тип цены'
+};
+const ST = {
+  draft:      {label:'Черновик',    cls:'badge-draft'},
+  clarifying: {label:'Уточнение',   cls:'badge-clarify'},
+  calculated: {label:'Рассчитано',  cls:'badge-calc'},
+  sent:       {label:'Отправлено',  cls:'badge-sent'},
+};
+
+// ═══ STATE ══════════════════════════════════
+const TG_TOKEN = '8090054234:AAHnoNv7Vt3LrK7pbPXPMB5Xcmvxgc3WIBc';
+let projects  = [];
+let activeId  = null;
+let listFilter= 'all';
+let pollTimer = null;
+
+// LK state
+let lkPhone   = localStorage.getItem('lk_phone') || null;
+let lkOrderId = null;
+
+// ═══ UTILS ══════════════════════════════════
+const fmt  = n => Number(n).toLocaleString('ru-RU');
+const esc  = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmtD = s => {
+  const d=new Date(s), now=new Date();
+  if(d.toDateString()===now.toDateString())
+    return d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'});
+};
+const fmtT = s => new Date(s).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+
+// ═══ SUPABASE ═══════════════════════════════
+const H = ()=>({'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'});
+const sbGet   = async p => { const r=await fetch(`${SB_URL}/rest/v1/${p}`,{headers:H()}); if(!r.ok) throw new Error(await r.text()); return r.json(); };
+const sbPost  = async (p,b) => { const r=await fetch(`${SB_URL}/rest/v1/${p}`,{method:'POST',headers:H(),body:JSON.stringify(b)}); if(!r.ok) throw new Error(await r.text()); return r.json(); };
+const sbPatch = async (p,b) => { const r=await fetch(`${SB_URL}/rest/v1/${p}`,{method:'PATCH',headers:H(),body:JSON.stringify(b)}); if(!r.ok) throw new Error(await r.text()); return r.json(); };
+const rpc     = async (fn,params) => { const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:H(),body:JSON.stringify(params)}); if(!r.ok) throw new Error(await r.text()); return r.json(); };
+
+// ═══ ПЕРЕКЛЮЧЕНИЕ ВИДОВ ═════════════════════
+function switchView(name, el){
+  document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.hdr-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  el.classList.add('active');
+  if(name==='lk') lkInit();
+}
+
+// ═══ ЛК КЛИЕНТА ═════════════════════════════
+function lkInit(){
+  if(lkPhone) lkShowOrders();
+  else        lkShowLogin();
+}
+
+function lkShowLogin(){
+  document.getElementById('lk-login-screen').style.display = 'flex';
+  document.getElementById('lk-orders-screen').style.display = 'none';
+}
+
+function lkShowOrders(){
+  document.getElementById('lk-login-screen').style.display  = 'none';
+  document.getElementById('lk-orders-screen').style.display = 'flex';
+  document.getElementById('lk-client-phone').textContent    = lkPhone;
+  document.getElementById('lk-client-name').textContent     = lkClientName();
+  lkRenderOrders();
+}
+
+function lkClientName(){
+  const p = projects.find(x=>x.manager_chat_id===lkPhone);
+  if(p?.manager_name) return p.manager_name.split(' · ')[0];
+  return 'Клиент';
+}
+
+function lkLogin(){
+  const phone = document.getElementById('lk-phone-inp').value.trim();
+  if(!phone){ alert('Введите номер телефона'); return; }
+  lkPhone = phone;
+  localStorage.setItem('lk_phone', phone);
+  lkShowOrders();
+}
+
+function lkLogout(){
+  lkPhone = null;
+  lkOrderId = null;
+  localStorage.removeItem('lk_phone');
+  lkShowLogin();
+  document.getElementById('lk-right').innerHTML = `<div class="lk-no-order"><div style="font-size:40px;margin-bottom:12px;opacity:.4">💬</div><div style="font-weight:600;font-size:15px;color:#617e98">Войдите и выберите заказ</div></div>`;
+}
+
+function lkRenderOrders(){
+  const myOrders = projects.filter(p =>
+    p.manager_chat_id === lkPhone ||
+    (p.manager_name && p.manager_name.includes(lkPhone))
+  );
+
+  const list = myOrders;
+  const el   = document.getElementById('lk-order-list');
+
+  if(!list.length){
+    el.innerHTML = '<div style="color:#8c9daf;font-size:12px;padding:14px;text-align:center">Нет заказов</div>';
+    return;
+  }
+
+  el.innerHTML = list.map(p=>{
+    const item  = p.project_items?.[0];
+    const attrs = item?.filled_attrs || {};
+    const st    = ST[p.status] || ST.draft;
+    const active= String(p.id)===String(lkOrderId);
+
+    const desc = [
+      attrs.series,
+      attrs.width_mm && attrs.depth_mm ? `${attrs.width_mm}×${attrs.depth_mm}` : null,
+    ].filter(Boolean).join(' · ') || (p.raw_request||'—').slice(0,45);
+
+    return `<div class="lk-ocard${active?' active':''}" onclick="lkPickOrder('${p.id}')">
+      <div class="lk-oc-top">
+        <span class="lk-oc-code">${esc(p.code||'—')}</span>
+        <span class="badge ${st.cls}">${st.label}</span>
+      </div>
+      <div class="lk-oc-desc">${esc(desc)}</div>
+      <div class="lk-oc-date">${fmtD(p.created_at)}</div>
+    </div>`;
+  }).join('');
+}
+
+async function lkPickOrder(id){
+  lkOrderId = id;
+  lkRenderOrders();
+  await lkRenderDetail(id);
+}
+
+async function lkRenderDetail(id){
+  const p     = projects.find(x=>String(x.id)===String(id));
+  if(!p) return;
+  const msgs  = await loadMsgs(id);
+  const item  = p.project_items?.[0];
+  const attrs = item?.filled_attrs || {};
+  const st    = ST[p.status] || ST.draft;
+
+  const stHint = {
+    draft:      'Заявка принята, обрабатывается',
+    clarifying: 'Менеджер уточняет детали',
+    calculated: 'Расчёт готов — смотрите ниже',
+    sent:       'КП отправлено на ваш email',
+  };
+
+  // Смета (если есть цена)
+  let estimateHTML = '';
+  if(item?.unit_price){
+    const qty   = attrs.quantity||item.quantity||1;
+    const total = item.total_price||(item.unit_price*qty);
+    estimateHTML = `<div class="lk-estimate" style="margin:0 22px 14px">
+      <div class="lk-est-title">✅ Расчёт готов</div>
+      ${attrs.series?`<div class="lk-est-row"><span>${esc(attrs.series)}${attrs.width_mm?` ${attrs.width_mm}×${attrs.depth_mm}`:''}</span><span style="font-weight:600">${fmt(item.unit_price)} ₽/шт.</span></div>`:''}
+      ${qty>1?`<div class="lk-est-row"><span>Количество</span><span style="font-weight:600">${qty} шт.</span></div>`:''}
+      <div class="lk-est-total">
+        <span class="lk-est-total-label">Итого</span>
+        <span class="lk-est-total-price">${fmt(total)} ₽</span>
+      </div>
+    </div>`;
+  }
+
+  // Сообщения чата
+  const bubbles = msgs.length
+    ? msgs.map(m=>{
+        // outgoing = от менеджера, incoming = от клиента
+        const isMgr = m.direction==='outgoing';
+        const isTg  = m.structured_data?.source === 'telegram';
+        const name  = isMgr ? 'Бот' : 'Вы';
+        const tgBadge = isTg ? `<span class="tg-badge" title="Telegram">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.93 6.89l-1.68 7.92c-.12.56-.46.7-.93.43l-2.57-1.89-1.24 1.19c-.14.14-.25.25-.51.25l.18-2.62 4.74-4.28c.21-.18-.04-.28-.32-.1L8.18 14.3l-2.52-.79c-.55-.17-.56-.55.11-.81l9.85-3.8c.45-.17.85.11.71.79z" fill="#2AABEE"/>
+          </svg>
+        </span>` : '';
+        return `<div class="lk-msg${isMgr?'':' me'}">
+          <div class="lk-ava ${isMgr?'mgr':'cli'}">${isMgr?'🤖':'Я'}</div>
+          <div class="lk-bbl ${isMgr?'mgr':'cli'}">
+            <div class="lk-msg-sender">${name}${tgBadge}</div>
+            ${esc(m.message_text||'')}
+            <div class="lk-msg-time">${fmtT(m.created_at)}</div>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div style="color:#8c9daf;font-size:12px;text-align:center;padding:20px 0">Чат пока пустой</div>';
+
+  document.getElementById('lk-right').innerHTML = `
+    <div class="lk-detail">
+      <div class="lk-order-info">
+        <div class="lk-oi-top">
+          <div>
+            <div class="lk-oi-code">${esc(p.code||'—')}</div>
+            <div class="lk-oi-meta">📅 ${fmtD(p.created_at)}</div>
+          </div>
+          <span class="badge ${st.cls}" style="font-size:12px;padding:4px 12px">${st.label}</span>
+        </div>
+        ${p.raw_request?`<div class="lk-oi-desc">"${esc(p.raw_request.slice(0,120))}"</div>`:''}
+        <div class="lk-status-row">
+          <div class="lk-st-dot ${p.status}"></div>
+          <div class="lk-st-text">${st.label}</div>
+          <div class="lk-st-hint">— ${stHint[p.status]||''}</div>
+        </div>
+      </div>
+      ${estimateHTML}
+      <div class="lk-chat-wrap">
+        <div class="lk-chat-title">💬 Чат с менеджером</div>
+        <div class="lk-msgs" id="lk-msgs">${bubbles}</div>
+        <div class="lk-inp-row">
+          <textarea id="lk-chat-inp" placeholder="Напишите менеджеру…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();lkSend('${id}')}"></textarea>
+          <button class="lk-send" onclick="lkSend('${id}')" id="lk-send-btn">Отправить</button>
+        </div>
+      </div>
+    </div>`;
+
+  const msgs_el = document.getElementById('lk-msgs');
+  if(msgs_el) msgs_el.scrollTop = msgs_el.scrollHeight;
+}
+
+async function lkSend(id){
+  const inp  = document.getElementById('lk-chat-inp');
+  const btn  = document.getElementById('lk-send-btn');
+  const text = inp?.value.trim();
+  if(!text) return;
+  inp.disabled = btn.disabled = true;
+  inp.value = '';
+  try {
+    await sbPost('clarification_messages',{
+      project_id: parseInt(id),
+      direction: 'incoming',
+      message_text: text,
+      structured_data: {sender:'client', phone: lkPhone}
+    });
+    const p = projects.find(x=>String(x.id)===String(id));
+    if(p && p.status==='draft') await sbPatch(`projects?id=eq.${id}`,{status:'clarifying'});
+    await loadProjects();
+    lkRenderDetail(id);
+  } catch(e){
+    // Демо — добавить локально
+    const el = document.getElementById('lk-msgs');
+    if(el){
+      el.innerHTML += `<div class="lk-msg me"><div class="lk-ava cli">Я</div><div class="lk-bbl cli"><div class="lk-msg-sender">Вы</div>${esc(text)}<div class="lk-msg-time">${fmtT(new Date())}</div></div></div>`;
+      el.scrollTop = el.scrollHeight;
+    }
+  }
+  inp.disabled = btn.disabled = false;
+  inp?.focus();
+}
+
+async function lkNewOrder(){
+  const text = prompt('Опишите что нужно:');
+  if(!text) return;
+  const code = 'КЛ-'+Date.now().toString(36).toUpperCase().slice(-5);
+  try {
+    const res = await sbPost('projects',{
+      manager_name: lkClientName(),
+      source: 'lk', raw_request: text, status: 'draft',
+      code, manager_chat_id: lkPhone
+    });
+    await loadProjects();
+    const newId = Array.isArray(res)?res[0]?.id:res?.id;
+    if(newId) lkPickOrder(newId);
+  } catch(e){ alert('Ошибка: '+e.message); }
+}
+
+// ═══ ЗАГРУЗКА ═══════════════════════════════
+async function loadProjects(){
+  try {
+    const data = await sbGet('projects?select=*,project_items(*)&order=created_at.desc&is_active=eq.true');
+    projects = data;
+  } catch(e) {
+    projects = [];
+  }
+  renderList();
+  if(activeId) renderRight(activeId);
+}
+
+// ═══ СПИСОК ══════════════════════════════════
+function setFilter(f, el){
+  listFilter = f;
+  document.querySelectorAll('.f-pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  renderList();
+}
+
+function renderList(){
+  const list = projects.filter(p => listFilter==='all' || p.status===listFilter);
+  const el   = document.getElementById('plist');
+
+  if(!list.length){
+    el.innerHTML = '<div style="color:#8c9daf;font-size:12px;padding:14px 6px;text-align:center">Нет заявок</div>';
+    return;
+  }
+
+  el.innerHTML = list.map(p=>{
+    const item  = p.project_items?.[0];
+    const attrs = item?.filled_attrs || {};
+    const miss  = item?.missing_attrs || [];
+    const st    = ST[p.status] || ST.draft;
+    const active= String(p.id)===String(activeId);
+
+    const desc = [
+      attrs.series,
+      attrs.width_mm && attrs.depth_mm ? `${attrs.width_mm}×${attrs.depth_mm}` : null,
+      attrs.material_code ? (MAT_NAME[attrs.material_code]||attrs.material_code).split(' ')[0] : null,
+    ].filter(Boolean).join(' · ') || (p.raw_request||'—').slice(0,50);
+
+    const priceStr = item?.total_price ? `💰 ${fmt(item.total_price)} ₽` :
+                     miss.length       ? `❓ ${miss.length} не хватает` : '⏳';
+
+    return `<div class="pcard${active?' active':''}" onclick="pick('${p.id}')">
+      <div class="pc-top">
+        <span class="pc-code">${esc(p.code||'—')}</span>
+        <span class="badge ${st.cls}">${st.label}</span>
+      </div>
+      <div class="pc-desc">${esc(desc)}</div>
+      <div class="pc-bottom"><span>${priceStr}</span><span>${fmtD(p.created_at)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// ═══ ВЫБОР ЗАЯВКИ ══════════════════════════
+async function pick(id){
+  activeId = id;
+  renderList();
+  await renderRight(id);
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async()=>{
+    await loadProjects();
+    if(activeId) renderRight(activeId);
+  }, 15000);
+}
+
+// ═══ ПРАВАЯ ПАНЕЛЬ — 8 ЭЛЕМЕНТОВ ТЗ ════════
+async function renderRight(id){
+  const p    = projects.find(x=>String(x.id)===String(id));
+  if(!p){
+    const r = document.getElementById('right');
+    r.style.cssText = 'overflow-y:auto;padding:24px;height:100%';
+    return;
+  }
+
+  const msgs  = await loadMsgs(id);
+  const item  = p.project_items?.[0];
+  const attrs = item?.filled_attrs || {};
+  const miss  = item?.missing_attrs || [];
+  const st    = ST[p.status] || ST.draft;
+
+
+  // ── ПАРАМЕТРЫ ────────────────────────────
+  const paramRows = [];
+  if(attrs.series)        paramRows.push(['Серия', esc(attrs.series)]);
+  if(attrs.width_mm)      paramRows.push(['Размер', `${attrs.width_mm} × ${attrs.depth_mm||'?'} мм`]);
+  if(attrs.material_code) paramRows.push(['Поверхность', esc(MAT_NAME[attrs.material_code]||attrs.material_code)]);
+  if(attrs.quantity)      paramRows.push(['Количество', `${attrs.quantity} шт.`]);
+  if(attrs.price_type)    paramRows.push(['Тип цены', attrs.price_type==='wholesale'?'Оптовая':'Розничная']);
+  const totalP = paramRows.length + miss.length;
+  const pct = totalP ? Math.round(paramRows.length/totalP*100) : 0;
+
+  // ── СМЕТА ────────────────────────────────
+  let estimateSec = '';
+  if(item && item.unit_price){
+    const qty2  = attrs.quantity||item.quantity||1;
+    const tot2  = item.total_price||(item.unit_price*qty2);
+    const kp    = JSON.stringify({id,code:p.code,created_at:p.created_at,attrs,unit_price:item.unit_price,total_price:tot2,qty:qty2});
+    estimateSec = `
+      <div class="oc-sec">
+        <div class="oc-sec-label">Смета</div>
+        <div class="oc-row"><span class="oc-row-k">${esc(attrs.series||'Позиция')}${attrs.width_mm?' '+attrs.width_mm+'×'+(attrs.depth_mm||'?'):''}${attrs.material_code?' · '+(MAT_NAME[attrs.material_code]||attrs.material_code):''}</span><span class="oc-row-v">${fmt(item.unit_price)} ₽/шт.</span></div>
+        ${qty2>1?`<div class="oc-row"><span class="oc-row-k">Количество</span><span class="oc-row-v">${qty2} шт.</span></div>`:''}
+        ${qty2>1?`<div class="oc-row"><span class="oc-row-k">Сумма</span><span class="oc-row-v">${fmt(item.unit_price*qty2)} ₽</span></div>`:''}
+        <div class="oc-row"><span class="oc-row-k">НДС 5%</span><span class="oc-row-v" style="color:#16a34a">включён</span></div>
+      </div>
+      <div class="oc-total">
+        <span class="oc-total-label">Итого</span>
+        <span class="oc-total-price">${fmt(tot2)} ₽</span>
+      </div>
+      <div class="oc-actions">
+        <button class="btn primary" onclick='printKP(${kp})'>🖨 КП (PDF)</button>
+        <button class="btn" onclick="markSent('${id}')">📤 Отправлено</button>
+        <button class="btn" onclick="editProject('${id}')">✏️ Редактировать</button>
+        <button class="btn-recalc" id="btn-recalc" onclick="recalculate('${id}')">🔄 Пересчитать</button>
+        <button class="btn" onclick="deleteProject('${id}')" style="margin-left:auto;color:#c0392b;border-color:#f5c6cb">🗑 Удалить</button>
+      </div>`;
+  } else {
+    estimateSec = `
+      <div class="oc-sec" style="color:#8c9daf;font-size:13px">
+        ${miss.length ? '⏳ Уточняем: '+miss.map(f=>esc(MISS_LABEL[f]||f)).join(', ') : '⏳ Идёт расчёт…'}
+      </div>
+      <div class="oc-actions">
+        <button class="btn" onclick="editProject('${id}')">✏️ Редактировать</button>
+        <button class="btn-recalc" id="btn-recalc" onclick="recalculate('${id}')">🔄 Пересчитать</button>
+        <button class="btn" onclick="deleteProject('${id}')" style="margin-left:auto;color:#c0392b;border-color:#f5c6cb">🗑 Удалить</button>
+      </div>`;
+  }
+
+  // ── ЧАТ ──────────────────────────────────
+  const tgSvgS = '<svg width="14" height="14" viewBox="0 0 24 24" style="vertical-align:middle;flex-shrink:0"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.93 6.89l-1.68 7.92c-.12.56-.46.7-.93.43l-2.57-1.89-1.24 1.19c-.14.14-.25.25-.51.25l.18-2.62 4.74-4.28c.21-.18-.04-.28-.32-.1L8.18 14.3l-2.52-.79c-.55-.17-.56-.55.11-.81l9.85-3.8c.45-.17.85.11.71.79z" fill="#2AABEE"/></svg>';
+  const chatBubbles = msgs.length ? msgs.map(m=>{
+    const out = m.direction==='outgoing';
+    const fromTg = m.structured_data && m.structured_data.source==='telegram';
+    return `<div class="cw-bubble ${out?'out':'in'}">
+      <div class="cw-text">${esc(m.message_text||'')}</div>
+      <div class="cw-time">${fromTg?tgSvgS:''}<span>${fmtT(m.created_at)}</span></div>
+    </div>`;
+  }).join('') : '<div class="ichat-empty">Сообщений пока нет</div>';
+
+  // ── СБОРКА ──────────────────────────────
+  const rightEl = document.getElementById('right');
+  rightEl.style.cssText = 'overflow:hidden;padding:0;height:100%';
+  rightEl.innerHTML = `<div class="detail-split">
+    <div class="detail-left">
+      <div class="oc">
+        <div class="oc-head">
+          <div class="oc-head-top">
+            <div class="oc-code">${esc(p.code||'—')}</div>
+            <span class="badge ${st.cls}" style="font-size:12px;padding:4px 12px;margin-top:2px">${st.label}</span>
+          </div>
+          <div class="oc-meta">
+            <span>👤 ${esc(p.manager_name||'—')}</span>
+            <span>📡 ${esc(p.source||'—')}</span>
+            <span>🕐 ${fmtD(p.created_at)}</span>
+          </div>
+          ${p.raw_request && p.raw_request!=='Confirmation'?`<div class="oc-raw">"${esc(p.raw_request.slice(0,140))}"</div>`:''}
+          <div class="oc-pipe" style="margin-top:14px">${buildPipe(p.status)}</div>
+        </div>
+        ${(p.client_name||p.client_email||p.client_phone)?`
+        <div class="oc-sec">
+          <div class="oc-sec-label">Клиент</div>
+          ${p.client_name?`<div class="oc-row"><span class="oc-row-k">Имя</span><span class="oc-row-v">${esc(p.client_name)}</span></div>`:''}
+          ${p.client_phone?`<div class="oc-row"><span class="oc-row-k">Телефон</span><span class="oc-row-v"><a href="tel:${esc(p.client_phone)}" style="color:#1e2f3d;text-decoration:none">${esc(p.client_phone)}</a></span></div>`:''}
+          ${p.client_email?`<div class="oc-row"><span class="oc-row-k">Email</span><span class="oc-row-v"><a href="mailto:${esc(p.client_email)}" style="color:#2155a0;text-decoration:none">${esc(p.client_email)}</a></span></div>`:''}
+        </div>`:''}
+        <div class="oc-sec">
+          <div class="oc-sec-label">Параметры ${totalP?`· ${paramRows.length}/${totalP}`:''}</div>
+          ${paramRows.length ? paramRows.map(([k,v])=>`<div class="oc-row"><span class="oc-row-k">${k}</span><span class="oc-row-v">${v}</span></div>`).join('') : '<div style="font-size:12px;color:#8c9daf">Пока ничего не распознано</div>'}
+          ${miss.length ? `<div class="oc-miss">${miss.map(f=>`<span class="oc-miss-tag">❓ ${esc(MISS_LABEL[f]||f)}</span>`).join('')}</div>` : (paramRows.length?'<div style="font-size:11px;color:#16a34a;margin-top:8px">✓ Все данные получены</div>':'')}
+          ${totalP ? `<div class="oc-progress"><div class="oc-progress-bar" style="width:${pct}%"></div></div>` : ''}
+        </div>
+        ${estimateSec}
+      </div>
+    </div>
+    <div class="detail-right">
+      <div class="ichat-hdr">
+        <div class="ichat-hdr-title">💬 Чат с клиентом</div>
+        <div class="ichat-hdr-sub">${esc(p.manager_name||'')}${p.manager_chat_id?' · TG '+p.manager_chat_id:''}</div>
+      </div>
+      <div class="ichat-msgs" id="ichat-msgs">${chatBubbles}</div>
+      <div class="ichat-bar">
+        <textarea id="chat-inp" placeholder="Написать клиенту…" rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg('${id}')}"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+        <button class="ichat-send" id="send-btn" onclick="sendMsg('${id}')">&#8593;</button>
+      </div>
+    </div>
+  </div>`;
+  const cm = document.getElementById('ichat-msgs');
+  if(cm) cm.scrollTop = cm.scrollHeight;
+}
+
+// ═══ ВСПОМОГАТЕЛЬНЫЕ ═══════════════════════
+function buildPipe(status){
+  const steps = ['draft','clarifying','calculated','sent'];
+  const labels = {draft:'Черновик', clarifying:'Уточнение', calculated:'Рассчитано', sent:'Отправлено'};
+  const cur = steps.indexOf(status);
+  return steps.map((s,i)=>`
+    <div class="sp-step ${i<cur?'done':i===cur?'active':''}">${labels[s]}</div>
+    ${i<steps.length-1?`<div class="sp-line ${i<cur?'done':''}"></div>`:''}`
+  ).join('');
+}
+
+async function loadMsgs(id){
+  try { return await sbGet(`clarification_messages?project_id=eq.${id}&order=created_at.asc`); }
+  catch(e){ return projects.find(x=>String(x.id)===String(id))?._msgs || []; }
+}
+
+async function recalculate(id){
+  const btn = document.getElementById('btn-recalc');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Пересчёт…'; }
+
+  const p     = projects.find(x=>String(x.id)===String(id));
+  const item  = p?.project_items?.[0];
+  const attrs = item?.filled_attrs || {};
+
+  if(attrs.series && attrs.width_mm && attrs.material_code){
+    const code = `${attrs.series}-${attrs.width_mm}x${attrs.depth_mm||600}`;
+    try {
+      const res  = await rpc('get_price_by_code',{p_code:code, p_material:attrs.material_code});
+      const row  = Array.isArray(res) ? res[0] : res;
+      const unit = attrs.price_type==='wholesale' ? row?.price_wholesale : (row?.price_retail||row?.price_wholesale);
+      if(unit && item?.id){
+        const qty = attrs.quantity||1;
+        await sbPatch(`project_items?id=eq.${item.id}`,{unit_price:unit, total_price:unit*qty, status:'complete', missing_attrs:[]});
+        await sbPatch(`projects?id=eq.${id}`,{status:'calculated'});
+        await loadProjects();
+        renderRight(id);
+        return;
+      }
+    } catch(e){}
+  }
+
+  // Если RPC не сработал — сигналим боту
+  try {
+    await sbPost('clarification_messages',{project_id:parseInt(id),direction:'incoming',message_text:'[ПЕРЕСЧИТАТЬ]'});
+    await loadProjects();
+    renderRight(id);
+  } catch(e){}
+
+  if(btn){ btn.disabled=false; btn.innerHTML='🔄 Пересчитать'; }
+}
+
+async function sendMsg(id){
+  const inp  = document.getElementById('chat-inp');
+  const btn  = document.getElementById('send-btn');
+  const text = inp ? inp.value.trim() : '';
+  if(!text) return;
+  inp.disabled = btn.disabled = true;
+  inp.value = '';
+  const p = projects.find(x=>String(x.id)===String(id));
+  try {
+    await sbPost('clarification_messages',{
+      project_id: parseInt(id),
+      direction: 'outgoing',
+      message_text: text,
+      structured_data: {sender:'manager'}
+    });
+    if(p && p.manager_chat_id){
+      fetch('https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({chat_id: p.manager_chat_id, text: text})
+      }).catch(()=>{});
+    }
+    await loadProjects();
+    renderRight(id);
+    if(lkOrderId===id) lkRenderDetail(id);
+  } catch(e){ inp.value = text; }
+  inp.disabled = btn.disabled = false;
+  inp && inp.focus();
+}
+
+async function markSent(id){
+  try { await sbPatch(`projects?id=eq.${id}`,{status:'sent'}); await loadProjects(); renderRight(id); }
+  catch(e){ alert('(демо)'); }
+}
+
+async function deleteProject(id){
+  const p = projects.find(x=>String(x.id)===String(id));
+  const label = p ? (p.code||'заявку') : 'заявку';
+  if(!confirm(`Удалить ${label}?\n\nЭто действие необратимо.`)) return;
+  try {
+    await sbPatch(`projects?id=eq.${id}`, {is_active: false});
+    activeId = null;
+    document.getElementById('right').innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Выберите заявку</div></div>';
+    await loadProjects();
+  } catch(e){ alert('Ошибка удаления: '+e.message); }
+}
+
+// ═══ РЕДАКТИРОВАНИЕ СУЩЕСТВУЮЩЕЙ ЗАЯВКИ ═════
+let _npEditMode = null;      // id проекта при редактировании
+let _npEditPrefill = null;   // attrs для предзаполнения
+
+async function editProject(id){
+  const p    = projects.find(x=>String(x.id)===String(id));
+  const item = p?.project_items?.[0];
+  const a    = item?.filled_attrs || {};
+  _npEditMode   = id;
+  _npEditPrefill = a;
+
+  await openNP(); // сброс формы и загрузка типов
+  // Переключаем режим UI
+  document.querySelector('.np-hdr h3').textContent = '✏️ Редактировать заявку';
+  $v('np-save-btn').textContent = 'Сохранить изменения';
+
+  // Простые поля
+  npSelPrice(a.price_type||'retail');
+  if(a.width_mm)  $v('np-width').value  = a.width_mm;
+  if(a.depth_mm)  $v('np-depth').value  = a.depth_mm;
+  if(a.quantity)  $v('np-qty').value    = a.quantity;
+
+  // Находим product_type по series через БД, затем выбираем
+  if(a.series){
+    try{
+      const vRes = await sbGet(`product_variants?series=eq.${a.series}&is_active=eq.true&limit=1&select=product_type_id`);
+      const ptId = vRes?.[0]?.product_type_id;
+      const type = ptId && (_npTypes||[]).find(t=>t.id===ptId);
+      if(type) npSwSelect(type); // запускает npUpdFields, который применит _npEditPrefill
+    }catch(e){}
+  }
+}
+
+async function npSaveEdit(){
+  if(!npRes){ npErr('Сначала дождитесь расчёта цены'); return; }
+  const p    = projects.find(x=>String(x.id)===String(_npEditMode));
+  const item = p?.project_items?.[0];
+  if(!item) return;
+  const variant = npGetVariant();
+  const w   = parseInt($v('np-width').value)||0;
+  const d   = variant?.depth_mm&&$v('np-depth').value?parseInt($v('np-depth').value):null;
+  const mat = $v('np-mat').value;
+  const vib = $v('np-vib')?.value||null;
+  const qty = parseInt($v('np-qty').value)||1;
+  const attrs = Object.assign({}, item.filled_attrs||{}, {
+    series: variant?.series||item.filled_attrs?.series||'',
+    width_mm:w, material_code:mat, quantity:qty, price_type:npPT
+  });
+  if(d)   attrs.depth_mm=d;        else delete attrs.depth_mm;
+  if(vib) attrs.vibration_class=vib;
+  const btn=$v('np-save-btn');
+  btn.disabled=true; btn.textContent='Сохранение...';
+  try{
+    await sbPatch(`project_items?id=eq.${item.id}`,{
+      filled_attrs:attrs, quantity:qty,
+      unit_price:npRes._unit, total_price:npRes._unit*qty,
+      status:'complete', missing_attrs:[]
+    });
+    await sbPatch(`projects?id=eq.${_npEditMode}`,{status:'calculated'});
+    closeNP(); await loadProjects(); renderRight(_npEditMode);
+  }catch(e){ npErr('Ошибка: '+e.message); btn.disabled=false; btn.textContent='Сохранить изменения'; }
+}
+
+function printKP({id,code,created_at,attrs,unit_price,total_price,qty}){
+  const m    = Object.entries(MAT_NAME).find(([k])=>k===attrs?.material_code);
+  const date = new Date(created_at).toLocaleDateString('ru-RU');
+  const w    = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${code}</title>
+  <style>body{font-family:Arial,sans-serif;max-width:680px;margin:30px auto;font-size:13px;color:#1e293b}
+  .hdr{display:flex;justify-content:space-between;border-bottom:3px solid #1e3a5f;padding-bottom:12px;margin-bottom:14px}
+  .logo{font-size:20px;font-weight:900;color:#1e3a5f}.logo span{color:#e63329}
+  .contacts{text-align:right;font-size:11px;color:#64748b;line-height:1.8}
+  h1{font-size:18px;font-weight:700;margin-bottom:3px}.meta{color:#64748b;font-size:11px;margin-bottom:16px}
+  table{width:100%;border-collapse:collapse;margin-bottom:14px}
+  td{padding:8px 10px;border-bottom:1px solid #e2e8f0}td:first-child{color:#64748b;width:50%}td:last-child{font-weight:600}
+  .total{background:#f0f9ff;border-radius:6px;padding:14px 16px}
+  .tr{display:flex;justify-content:space-between;padding:3px 0;font-size:14px}
+  .tr.big{font-size:22px;font-weight:800;margin-top:8px;padding-top:10px;border-top:2px solid #bae6fd}
+  .footer{font-size:10px;color:#94a3b8;text-align:center;margin-top:20px;line-height:1.8}
+  @media print{button{display:none}}</style></head><body>
+  <div class="hdr">
+    <div><div class="logo">ГРУППА <span>РОСТА</span></div><div style="font-size:11px;color:#64748b;margin-top:3px">Лабораторная мебель от производителя</div></div>
+    <div class="contacts"><div>8 (800) 302-50-53</div><div>zakaz@gruppa-rosta.ru</div><div>gruppa-rosta.ru</div></div>
+  </div>
+  <h1>Коммерческое предложение</h1>
+  <div class="meta">№ ${code} &nbsp;|&nbsp; ${date} &nbsp;|&nbsp; Действительно 10 рабочих дней</div>
+  <table>
+    <tr><td>Изделие</td><td>${attrs?.series||'—'}</td></tr>
+    <tr><td>Размер (Ш × Г)</td><td>${attrs?.width_mm&&attrs?.depth_mm?attrs.width_mm+'×'+attrs.depth_mm+' мм':'—'}</td></tr>
+    <tr><td>Рабочая поверхность</td><td>${m?m[1]:attrs?.material_code||'—'}</td></tr>
+    <tr><td>Количество</td><td>${qty||1} шт.</td></tr>
+    <tr><td>НДС</td><td>Включён (5%)</td></tr>
+  </table>
+  <div class="total">
+    <div class="tr"><span>Цена за единицу</span><span>${fmt(unit_price)} ₽</span></div>
+    ${(qty||1)>1?`<div class="tr"><span>Количество</span><span>${qty} шт.</span></div>`:''}
+    <div class="tr big"><span>ИТОГО</span><span>${fmt(total_price)} ₽</span></div>
+  </div>
+  <div class="footer">ИП Айкин Владимир Николаевич · ИНН: 210302838016 · ОГРНИП: 315213200002795<br>
+  р/с 40802810729040004012 · ФИЛИАЛ «НИЖЕГОРОДСКИЙ» АО «АЛЬФА-БАНК» · БИК: 042202824</div>
+  <br><button onclick="window.print()">🖨 Распечатать</button>
+  </body></html>`);
+  w.document.close();
+}
+
+
+// ═══ ФОРМА НОВОЙ ЗАЯВКИ ═════════════════════
+// ── DB-driven форма новой заявки ──────────────────────────────
+let npPT='retail', npRes=null, npBomRows=[], npAccData=[], npSelAcc=new Set();
+let _npTypes=null;   // кэш product_types
+let npVariants=[];   // варианты текущего типа
+
+function $v(id){ return document.getElementById(id); }
+function npNearest(arr,v){ return arr.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?b:a); }
+
+async function openNP(){
+  ['np-width','np-depth','np-client-name','np-client-phone',
+   'np-client-email','np-manager','np-notes']
+    .forEach(id=>{ const e=$v(id); if(e) e.value=''; });
+  $v('np-qty').value='1';
+  clearTimeout(_npDeb); _npDeb=null; _npSwActiveId=null;
+  npPT='retail'; npRes=null; npBomRows=[]; npAccData=[]; npSelAcc=new Set(); npVariants=[];
+  npSelPrice('retail');
+  $v('np-err').className='nf-err'; $v('np-err').textContent='';
+  $v('np-width-hint').textContent='';
+  // Скрываем доп.поля пока не выбрана серия
+  $v('np-depth-wrap').style.display='none';
+  $v('np-mat-wrap').style.display='none';
+  $v('np-vib-wrap').style.display='none';
+  npReset();
+  // Загружаем типы продуктов из БД (один раз)
+  if(!_npTypes){
+    _npTypes=await sbGet('product_types?is_active=eq.true&order=name&select=id,code,name,name_short');
+  }
+  // Сброс searchable select
+  $v('np-series').value='';
+  $v('np-series-search').value='';
+  $v('np-series-search').placeholder='— выберите позицию —';
+  $v('np-series-search').readOnly=false;
+  npSwBuildList();
+  $v('np-overlay').classList.add('open');
+}
+
+// ── Searchable select для серии ──────────────────────────
+let _npSwActiveId = null;
+
+function npSwBuildList(filter){
+  const list = $v('np-sw-list');
+  list.innerHTML = '';
+  const items = (_npTypes||[]).filter(t=>{
+    if(!filter) return true;
+    const q = filter.toLowerCase();
+    return t.name.toLowerCase().includes(q) || (t.name_short||'').toLowerCase().includes(q);
+  });
+  if(!items.length){
+    list.innerHTML='<div class="np-sw-item np-sw-empty">Ничего не найдено</div>';
+    return;
+  }
+  items.forEach(t=>{
+    const d = document.createElement('div');
+    d.className = 'np-sw-item' + (t.id==_npSwActiveId?' active':'');
+    d.dataset.id = t.id;
+    const short = t.name_short ? `<b>${t.name_short}</b> — ` : '';
+    d.innerHTML = short + t.name;
+    d.onclick = ()=>{ npSwSelect(t); };
+    list.appendChild(d);
+  });
+}
+
+function npSwToggle(){
+  const list=$v('np-sw-list');
+  if(list.classList.contains('open')){ list.classList.remove('open'); }
+  else { $v('np-series-search').readOnly=false; npSwBuildList(); list.classList.add('open'); }
+}
+
+function npSwFilter(){
+  npSwBuildList($v('np-series-search').value);
+  $v('np-sw-list').classList.add('open');
+}
+
+function npSwSelect(t){
+  _npSwActiveId = t.id;
+  $v('np-series').value = t.id;
+  const short = t.name_short ? `${t.name_short} — ` : '';
+  $v('np-series-search').value = short + t.name;
+  $v('np-sw-list').classList.remove('open');
+  npUpdFields();
+}
+
+function npSwClose(e){
+  const wrap=$v('np-sw-wrap');
+  if(wrap && !wrap.contains(e.target)) $v('np-sw-list').classList.remove('open');
+}
+document.addEventListener('mousedown', npSwClose);
+
+function npSwOpen(){
+  npSwBuildList($v('np-series-search').value||undefined);
+  $v('np-sw-list').classList.add('open');
+}
+
+function closeNP(){
+  _npEditMode=null; _npEditPrefill=null;
+  document.querySelector('.np-hdr h3').textContent='Новая заявка';
+  $v('np-save-btn').textContent='Создать заявку';
+  $v('np-overlay').classList.remove('open');
+  $v('np-sw-list').classList.remove('open');
+  _npSwActiveId=null;
+  $v('np-series-search').value='';
+  $v('np-series').value='';
+}
+
+function npSelPrice(t){
+  npPT=t;
+  $v('np-pt-retail').className='nf-pt-opt'+(t==='retail'?' on':'');
+  $v('np-pt-wholesale').className='nf-pt-opt'+(t==='wholesale'?' on':'');
+  if(npRes?.price_retail){
+    const scale=npRes._scale||1;
+    const base=t==='wholesale'?+npRes.price_wholesale:+npRes.price_retail;
+    npRes._unit=Math.round(base*scale);
+    npAccRender();
+  } else {
+    npReset();
+  }
+}
+
+async function npUpdFields(){
+  npReset();
+  $v('np-depth-wrap').style.display='none';
+  $v('np-mat-wrap').style.display='none';
+  $v('np-vib-wrap').style.display='none';
+  const ptId=$v('np-series').value;
+  if(!ptId){ npVariants=[]; return; }
+
+  // Загружаем варианты для выбранного типа
+  npVariants=await sbGet(
+    `product_variants?product_type_id=eq.${ptId}&is_active=eq.true`+
+    `&order=width_mm,depth_mm&select=id,code,series,width_mm,depth_mm`
+  );
+  if(!npVariants.length){
+    $v('np-idle-hint').style.display='';
+    $v('np-idle-hint').innerHTML='Для этой позиции нет вариантов в каталоге';
+    $v('np-width-hint').textContent='';
+    return;
+  }
+
+  // Стандартные ширины (подсказка)
+  const widths=[...new Set(npVariants.map(v=>v.width_mm))].sort((a,b)=>a-b);
+  const wh=$v('np-width-hint');
+  if(wh) wh.textContent='Стандарт: '+widths.join(', ')+' мм';
+
+  // Нужна ли глубина?
+  const hasDepth=npVariants.some(v=>v.depth_mm);
+  if(hasDepth){
+    $v('np-depth-wrap').style.display='';
+    const depths=[...new Set(npVariants.map(v=>v.depth_mm).filter(Boolean))].sort((a,b)=>a-b);
+    const dh=$v('np-depth-hint');
+    if(dh) dh.textContent='Стандарт: '+depths.join(', ')+' мм';
+  }
+
+  // Нужен ли доп. параметр (виброизоляция)?
+  // Определяем: несколько вариантов с одинаковой шириной, где суффикс кода — малое число (< 200)
+  const hasExtra=npVariants.some((v,i)=>
+    npVariants.some((u,j)=>j!==i&&u.width_mm===v.width_mm&&u.depth_mm===v.depth_mm)
+  );
+  if(hasExtra){
+    const extraVals=[...new Set(npVariants.map(v=>{
+      const m=v.code.match(/-(\d+)$/); return m?m[1]:null;
+    }).filter(v=>v&&parseInt(v)<200))].sort((a,b)=>+a-+b);
+    if(extraVals.length){
+      const vibSel=$v('np-vib');
+      vibSel.innerHTML=extraVals.map(v=>`<option value="${v}">${v} мм</option>`).join('');
+      vibSel.value=extraVals[0];
+      $v('np-vib-wrap').style.display='';
+    }
+  }
+
+  // Загружаем материалы из pricing_rules для всей серии
+  const vids=npVariants.map(v=>v.id);
+  const mats=await sbGet(
+    `pricing_rules?variant_id=in.(${vids.join(',')})&select=materials(id,code,name_short)&limit=200`
+  );
+  const seen=new Map();
+  mats.forEach(pr=>{ const m=pr.materials; if(m&&!seen.has(m.code)) seen.set(m.code,m); });
+  const matSel=$v('np-mat');
+  matSel.innerHTML='<option value="">— выберите —</option>';
+  seen.forEach(m=>{
+    const o=document.createElement('option');
+    o.value=m.code; o.textContent=m.name_short||m.code;
+    matSel.appendChild(o);
+  });
+  if(seen.size===1){
+    matSel.value=[...seen.keys()][0];
+    $v('np-mat-wrap').style.display='none';
+  } else {
+    $v('np-mat-wrap').style.display='';
+  }
+  // Если ширина уже введена — пересчитываем сразу
+  // В режиме редактирования: применяем сохранённый материал и вибро
+  if(_npEditPrefill){
+    const pf=_npEditPrefill;
+    if(pf.material_code) $v('np-mat').value=pf.material_code;
+    if(pf.vibration_class&&$v('np-vib')) $v('np-vib').value=pf.vibration_class;
+  }
+  npAutoCalcNow();
+}
+
+function npReset(){
+  $v('np-price-card').style.display='none';
+  $v('np-idle-hint').style.display='';
+  $v('np-idle-hint').innerHTML='Выберите серию и ширину —<br>цена и матрица обновятся автоматически';
+  $v('np-mx-block').style.display='none';
+  $v('np-acc-block').style.display='none';
+  $v('np-save-btn').disabled=true;
+  npRes=null; npBomRows=[]; npAccData=[]; npSelAcc=new Set();
+}
+
+// Находим ближайший вариант по width/depth/extra из текущих npVariants
+function npGetVariant(){
+  if(!npVariants.length) return null;
+  const wRaw=parseInt($v('np-width').value)||0;
+  if(!wRaw) return null;
+  const widths=[...new Set(npVariants.map(v=>v.width_mm))].sort((a,b)=>a-b);
+  const nearW=npNearest(widths,wRaw);
+  const wh=$v('np-width-hint');
+  if(wh && wRaw!==nearW) wh.textContent=`Ближайший стандарт: ${nearW} мм, цена пересчитана`;
+  let filtered=npVariants.filter(v=>v.width_mm===nearW);
+  // Глубина
+  const hasDepth=filtered.some(v=>v.depth_mm);
+  if(hasDepth){
+    const dRaw=parseInt($v('np-depth').value)||0;
+    if(dRaw){
+      const depths=[...new Set(filtered.map(v=>v.depth_mm).filter(Boolean))].sort((a,b)=>a-b);
+      const nearD=npNearest(depths,dRaw);
+      filtered=filtered.filter(v=>v.depth_mm===nearD);
+    }
+  }
+  // Доп. параметр (вибро)
+  if(filtered.length>1){
+    const vibVal=$v('np-vib')?.value;
+    if(vibVal){
+      const match=filtered.find(v=>v.code.endsWith('-'+vibVal));
+      if(match) return match;
+    }
+  }
+  return filtered[0]||null;
+}
+
+function npSheetPieces(w, d){
+  const SW=1300, SL=3050;
+  if(!d) return Math.max(Math.floor(SL/w), Math.floor(SW/w));
+  return Math.max(Math.floor(SW/w)*Math.floor(SL/d), Math.floor(SW/d)*Math.floor(SL/w));
+}
+
+function npGetPriceAdjust(variant, mat, base){
+  // Возвращает {unit, note} для нестандартного размера
+  const wRaw=parseInt($v('np-width').value)||0;
+  const dRaw=$v('np-depth')?.value ? parseInt($v('np-depth').value)||0 : 0;
+  const stdW=variant.width_mm||0;
+  const stdD=variant.depth_mm||0;
+  const hasNonStd=(wRaw&&wRaw!==stdW)||(dRaw&&stdD&&dRaw!==stdD);
+  if(!hasNonStd) return {unit:Math.round(base), note:null};
+
+  const cW=wRaw||stdW, cD=dRaw||stdD;
+  if(mat==='PLS'||mat==='PLS_LAB'){
+    const pStd=Math.max(npSheetPieces(stdW,stdD||cD),1);
+    const pCust=Math.max(npSheetPieces(cW,cD||stdD),1);
+    const unit=Math.round(base*pStd/pCust);
+    return {unit, note:`Раскрой: стандарт ${pStd}шт, ваш размер ${pCust}шт`};
+  } else {
+    const dW=wRaw&&stdW?Math.round((wRaw-stdW)/100):0;
+    const dD=dRaw&&stdD?Math.round((dRaw-stdD)/100):0;
+    const inc=(dW+dD)*400;
+    const unit=Math.round(base+inc);
+    const note=inc!==0?`Нестандарт ${inc>0?'+':''}${fmt(inc)} ₽ к стандарту`:null;
+    return {unit, note};
+  }
+}
+
+function npErr(msg){ const e=$v('np-err'); e.textContent=msg; e.className='nf-err on'; }
+
+// ── Динамический пересчёт ─────────────────────────────────
+let _npDeb = null;
+
+// Вызывается при вводе ширины/глубины — дебаунс 500мс
+function npAutoCalc(){
+  clearTimeout(_npDeb);
+  _npDeb = setTimeout(()=>{
+    const variant=npGetVariant(), mat=$v('np-mat').value;
+    if(variant && mat) npCalc(); else npReset();
+  }, 500);
+}
+
+// Вызывается при смене материала / вибро — мгновенно
+function npAutoCalcNow(){
+  clearTimeout(_npDeb);
+  const variant=npGetVariant(), mat=$v('np-mat').value;
+  if(variant && mat) npCalc(); else npReset();
+}
+
+// Изменение кол-ва — только обновляем цену из кэша, BOM не перегружаем
+function npQtyChange(){
+  if(!npRes?._unit) return;
+  npAccRender();
+}
+
+async function npCalc(fromBtn=false){
+  $v('np-err').className='nf-err'; $v('np-err').textContent='';
+  const variant=npGetVariant();
+  if(!variant){
+    if(fromBtn) npErr(
+      !npVariants.length ? 'Нет вариантов для этой позиции в каталоге' :
+      !parseInt($v('np-width').value) ? 'Введите ширину изделия' :
+      'Не найден подходящий вариант'
+    );
+    return;
+  }
+  const mat=$v('np-mat').value;
+  if(!mat){ if(fromBtn) npErr('Выберите материал поверхности'); return; }
+  const btn=$v('np-calc-btn');
+  if(fromBtn){ btn.disabled=true; btn.textContent='Расчёт...'; }
+  try{
+    const res=await rpc('get_price_by_code',{p_code:variant.code,p_material:mat});
+    npRes=Array.isArray(res)?res[0]:res;
+    if(!npRes?.price_retail){
+      npReset(); npErr('Цена не найдена. Такой комбинации нет в каталоге.'); return;
+    }
+    const qty=parseInt($v('np-qty').value)||1;
+    const base=npPT==='wholesale'?+npRes.price_wholesale:+npRes.price_retail;
+    const {unit, note}=npGetPriceAdjust(variant, mat, base);
+    // Геометрический scale — только для BOM (масштабирование количества материалов)
+    const wRaw=parseInt($v('np-width').value)||0;
+    const dRaw=$v('np-depth')?.value?parseInt($v('np-depth').value)||0:0;
+    const stdW=variant.width_mm||0, stdD=variant.depth_mm||0;
+    let bomScale=1;
+    if(wRaw&&stdW) bomScale*=wRaw/stdW;
+    if(dRaw&&stdD) bomScale*=dRaw/stdD;
+    const priceScale=base?unit/base:1;
+    npRes._unit=unit; npRes._scale=priceScale; npRes._note=note||null;
+    // Показываем цену
+    $v('np-price-val').textContent=fmt(unit*qty)+' ₽';
+    $v('np-price-meta').textContent=
+      `${fmt(unit)} ₽/шт × ${qty} шт · ${npPT==='wholesale'?'Оптовая':'Розничная'}`+
+      (note?` · ${note}`:'');
+    $v('np-price-card').style.display='block';
+    $v('np-idle-hint').style.display='none';
+    $v('np-save-btn').disabled=false;
+    // Загружаем матрицу с геометрическим scale (для количества материалов)
+    npLoadMatrix(npRes.variant_id, npRes.material_id, bomScale);
+  }catch(e){ npErr('Ошибка: '+e.message); }
+  finally{ if(fromBtn){ btn.disabled=false; btn.textContent='Обновить расчёт'; } }
+}
+
+// Единицы, которые масштабируются пропорционально ширине
+const SCALE_UNITS = ['п.м','м.п','кв.м','м.кв','кг','м.','л.','г.','пог'];
+function applyScale(qty, unit, scale){
+  if(scale===1) return qty;
+  const u=(unit||'').toLowerCase();
+  return SCALE_UNITS.some(s=>u.includes(s)) ? +(qty*scale).toFixed(4) : qty;
+}
+
+async function npLoadMatrix(vid, mid, scale){
+  // BOM
+  try{
+    const rows=await rpc('get_bom',{p_variant_id:vid,p_material_id:mid});
+    if(rows?.length){
+      // Агрегируем дубли: одинаковые компоненты в одной категории суммируем
+      const agg=new Map();
+      rows.forEach(r=>{
+        const key=(r.category||'')+'||'+(r.component_name||'');
+        if(agg.has(key)){
+          agg.get(key).qty+=applyScale(r.quantity||0, r.unit, scale);
+        } else {
+          agg.set(key,{
+            name:  r.component_name||'—',
+            cat:   r.category||'',
+            unit:  r.unit||'',
+            qty:   applyScale(r.quantity||0, r.unit, scale),
+            price: r.price||0,
+          });
+        }
+      });
+      npBomRows=[...agg.values()];
+      $v('mx-labor').value='';
+      npMxRender();
+      $v('np-mx-block').style.display='';
+    } else {
+      // Нет BOM для этого материала — очищаем таблицу
+      npBomRows=[];
+      $v('np-mx-block').style.display='none';
+    }
+  }catch(e){ console.warn('BOM err',e); }
+  // Допы
+  try{
+    npAccData=[]; npSelAcc=new Set();
+    const rows=await sbGet(
+      `accessory_variants?variant_id=eq.${vid}&select=accessories(id,name,price_retail,price_wholesale)&limit=60`
+    );
+    const seen=new Set();
+    npAccData=rows
+      .filter(r=>r.accessories?.price_retail&&!seen.has(r.accessories.id)&&seen.add(r.accessories.id))
+      .map(r=>r.accessories);
+    if(npAccData.length){ npAccRender(); $v('np-acc-block').style.display=''; }
+  }catch(e){}
+}
+
+function npMxRender(){
+  let html=''; let lastCat=null;
+  for(let i=0;i<npBomRows.length;i++){
+    const r=npBomRows[i];
+    if(r.cat!==lastCat){
+      lastCat=r.cat;
+      html+=`<tr class="mx-cat"><td colspan="5">${esc(r.cat||'Прочее')}</td></tr>`;
+    }
+    const cost=Math.round(r.qty*r.price);
+    html+=`<tr class="mx-row">
+      <td class="mx-name" title="${esc(r.name)}">${esc(r.name)}</td>
+      <td class="mx-r">${esc(r.unit)}</td>
+      <td class="mx-r"><input type="number" class="mx-qty" value="${r.qty}" step="0.01" min="0" oninput="npMxEdit(${i},this.value)"></td>
+      <td class="mx-r">${fmt(r.price)}</td>
+      <td class="mx-cost" id="mxc${i}">${fmt(cost)} ₽</td>
+    </tr>`;
+  }
+  $v('np-mx-body').innerHTML=html;
+  npMxRecalc();
+}
+
+function npMxEdit(i,v){
+  npBomRows[i].qty=parseFloat(v)||0;
+  const el=$v('mxc'+i);
+  if(el) el.textContent=fmt(Math.round(npBomRows[i].qty*npBomRows[i].price))+' ₽';
+  npMxRecalc();
+}
+
+function npMxRecalc(){
+  const mat=npBomRows.reduce((s,r)=>s+Math.round(r.qty*r.price),0);
+  const lab=parseInt($v('mx-labor')?.value)||0;
+  $v('mx-mat-total').textContent=fmt(mat)+' ₽';
+  $v('mx-grand').textContent=fmt(mat+lab)+' ₽';
+}
+
+function npAccRender(){
+  const pf=npPT==='wholesale'?'price_wholesale':'price_retail';
+  $v('np-acc-list').innerHTML=npAccData.map(a=>`
+    <div class="mx-acc-item${npSelAcc.has(a.id)?' on':''}" onclick="npAccToggle(${a.id})">
+      <div class="mx-acc-cb">${npSelAcc.has(a.id)?'✓':''}</div>
+      <div class="mx-acc-name" title="${esc(a.name)}">${esc(a.name)}</div>
+      <div class="mx-acc-price">+${fmt(a[pf]||a.price_retail)} ₽</div>
+    </div>`).join('');
+  const accTot=npAccData.filter(a=>npSelAcc.has(a.id)).reduce((s,a)=>s+(a[pf]||a.price_retail||0),0);
+  $v('np-acc-total').textContent=accTot?`Допы: +${fmt(accTot)} ₽`:'';
+  // Обновляем главную цену с учётом допов
+  if(npRes?._unit!=null){
+    const qty=parseInt($v('np-qty').value)||1;
+    const unit=npRes._unit;
+    const total=(unit+accTot)*qty;
+    const scale=npRes._scale||1;
+    $v('np-price-val').textContent=fmt(total)+' ₽';
+    $v('np-price-meta').textContent=
+      `${fmt(unit)} ₽/шт`+(accTot?` + ${fmt(accTot)} допы`:'')+
+      ` × ${qty} шт · ${npPT==='wholesale'?'Оптовая':'Розничная'}`+
+      (npRes._note?` · ${npRes._note}`:'');
+  }
+}
+
+function npAccToggle(id){
+  if(npSelAcc.has(id)) npSelAcc.delete(id); else npSelAcc.add(id);
+  npAccRender();
+}
+
+async function npSave(){
+  if(_npEditMode){ await npSaveEdit(); return; }
+  if(!npRes) return;
+  const variant=npGetVariant();
+  const w=parseInt($v('np-width').value);
+  const d=variant?.depth_mm&&$v('np-depth').value?parseInt($v('np-depth').value):null;
+  const mat=$v('np-mat').value;
+  const vib=$v('np-vib')?.value||null;
+  const qty=parseInt($v('np-qty').value)||1;
+  const pf=npPT==='wholesale'?'price_wholesale':'price_retail';
+  const selAcc=npAccData.filter(a=>npSelAcc.has(a.id));
+  const accTot=selAcc.reduce((s,a)=>s+(a[pf]||a.price_retail||0),0);
+  const labor=parseInt($v('mx-labor')?.value)||0;
+  const matCost=npBomRows.reduce((s,r)=>s+Math.round(r.qty*r.price),0);
+  const attrs={series:variant?.series||'',width_mm:w,material_code:mat,quantity:qty,price_type:npPT};
+  if(d)   attrs.depth_mm=d;
+  if(vib) attrs.vibration_class=vib;
+  if(labor)   attrs.labor_cost=labor;
+  if(matCost) attrs.materials_cost=matCost;
+  if(npBomRows.length) attrs.bom=npBomRows.map(r=>({name:r.name,unit:r.unit,qty:r.qty,price:r.price}));
+  if(selAcc.length) attrs.accessories=selAcc.map(a=>({id:a.id,name:a.name,price:a[pf]||a.price_retail}));
+  const raw=[
+    npRes.variant_name||variant?.series||'',
+    d?`${w}×${d} мм`:`${w} мм`,
+    MAT_NAME[mat]||mat,
+    qty>1?`${qty} шт.`:'',
+    selAcc.map(a=>a.name).join(', '),
+    $v('np-notes').value.trim()
+  ].filter(Boolean).join(', ');
+  const btn=$v('np-save-btn');
+  btn.disabled=true; btn.textContent='Сохранение...';
+  try{
+    await rpc('save_project',{
+      p_manager_chat_id:'0',
+      p_manager_name:$v('np-manager').value.trim()||'Менеджер',
+      p_source:'manual',
+      p_raw_request:raw,
+      p_variant_id:npRes.variant_id,
+      p_material_id:npRes.material_id,
+      p_quantity:qty,
+      p_price_type:npPT,
+      p_unit_price:npRes._unit+accTot,
+      p_filled_attrs:attrs,
+      p_client_name:$v('np-client-name').value.trim()||null,
+      p_client_email:$v('np-client-email').value.trim()||null,
+      p_client_phone:$v('np-client-phone').value.trim()||null,
+    });
+    closeNP(); await loadProjects();
+  }catch(e){
+    npErr('Ошибка сохранения: '+e.message);
+    btn.disabled=false; btn.textContent='Создать заявку';
+  }
+}
+
+// ═══ INIT ═══════════════════════════════════
+loadProjects();
+if(lkPhone) lkInit();
+
+// ═══ CHAT MODAL ════════════════════════════
+let cwId = null, cwPoll = null;
+
+async function openChat(id){
+  cwId = id;
+  const p = projects.find(x=>String(x.id)===String(id));
+  document.getElementById('cw-title').textContent = p ? p.code : 'Чат';
+  document.getElementById('cw-sub').textContent = p ? (p.manager_name||'') + (p.manager_chat_id ? ' · TG: '+p.manager_chat_id : '') : '';
+  document.getElementById('chat-overlay').classList.add('open');
+  await cwRefresh();
+  if(cwPoll) clearInterval(cwPoll);
+  cwPoll = setInterval(cwRefresh, 5000);
+  setTimeout(()=>document.getElementById('cw-inp')&&document.getElementById('cw-inp').focus(),150);
+}
+
+function closeChat(){
+  document.getElementById('chat-overlay').classList.remove('open');
+  if(cwPoll){ clearInterval(cwPoll); cwPoll=null; }
+  cwId = null;
+}
+
+const tgSvg = '<svg width="11" height="11" viewBox="0 0 24 24" style="vertical-align:middle"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.93 6.89l-1.68 7.92c-.12.56-.46.7-.93.43l-2.57-1.89-1.24 1.19c-.14.14-.25.25-.51.25l.18-2.62 4.74-4.28c.21-.18-.04-.28-.32-.1L8.18 14.3l-2.52-.79c-.55-.17-.56-.55.11-.81l9.85-3.8c.45-.17.85.11.71.79z" fill="#2AABEE"/></svg>';
+
+async function cwRefresh(){
+  if(!cwId) return;
+  const msgs = await loadMsgs(cwId);
+  const el = document.getElementById('cw-msgs');
+  if(!el) return;
+  if(!msgs.length){ el.innerHTML='<div class="cw-empty">Сообщений пока нет</div>'; return; }
+  const prev = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+  el.innerHTML = msgs.map(m=>{
+    const out = m.direction==='outgoing';
+    const fromTg = m.structured_data && m.structured_data.source==='telegram';
+    return `<div class="cw-bubble ${out?'out':'in'}">
+      <div class="cw-text">${esc(m.message_text||'')}</div>
+      <div class="cw-time">${fromTg?tgSvg:''}<span>${fmtT(m.created_at)}</span>${out&&!fromTg?'<span style="color:#2AABEE;font-size:9px">Менеджер</span>':''}</div>
+    </div>`;
+  }).join('');
+  if(prev) el.scrollTop = el.scrollHeight;
+}
+
+async function cwSend(){
+  if(!cwId) return;
+  const inp = document.getElementById('cw-inp');
+  const btn = document.getElementById('cw-send-btn');
+  const text = inp ? inp.value.trim() : '';
+  if(!text) return;
+  inp.disabled = btn.disabled = true;
+  inp.value = '';
+  const p = projects.find(x=>String(x.id)===String(cwId));
+  try {
+    await sbPost('clarification_messages',{
+      project_id: parseInt(cwId),
+      direction: 'outgoing',
+      message_text: text,
+      structured_data: {sender:'manager'}
+    });
+    if(p && p.manager_chat_id){
+      fetch('https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({chat_id: p.manager_chat_id, text: text})
+      }).catch(()=>{});
+    }
+    await cwRefresh();
+  } catch(e){ inp.value = text; }
+  inp.disabled = btn.disabled = false;
+  inp && inp.focus();
+}
+</script>
+
+<div class="chat-overlay" id="chat-overlay" onclick="if(event.target===this)closeChat()">
+  <div class="chat-win">
+    <div class="cw-hdr">
+      <div class="cw-hdr-info">
+        <div class="cw-hdr-title" id="cw-title">Чат</div>
+        <div class="cw-hdr-sub" id="cw-sub"></div>
+      </div>
+      <button class="cw-close" onclick="closeChat()">×</button>
+    </div>
+    <div class="cw-msgs" id="cw-msgs"><div class="cw-empty">Загрузка…</div></div>
+    <div class="cw-bar">
+      <textarea id="cw-inp" placeholder="Написать клиенту…" rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();cwSend()}"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px'"></textarea>
+      <button class="cw-send" id="cw-send-btn" onclick="cwSend()">&#8593;</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
