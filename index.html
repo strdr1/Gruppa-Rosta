@@ -489,7 +489,7 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
       <!-- Доп. параметр (виброизоляция и т.п.) -->
       <div class="nf-group" id="np-vib-wrap" style="display:none">
         <div class="nf-label" id="np-vib-label">Виброизоляция, мм *</div>
-        <select id="np-vib" class="nf-inp" onchange="npAutoCalcNow()">
+        <select id="np-vib" class="nf-inp" onchange="npVibChanged()">
         </select>
       </div>
       <!-- Количество + Тип цены -->
@@ -1280,6 +1280,8 @@ function printKP({id,code,created_at,attrs,unit_price,total_price,qty}){
 let npPT='retail', npRes=null, npBomRows=[], npAccData=[], npSelAcc=new Set();
 let _npTypes=null;   // кэш product_types
 let npVariants=[];   // варианты текущего типа
+let npMatsByVariant=new Map(); // variant_id -> Set<material_code>
+let npAllMats=new Map();       // material_code -> {id,code,name_short}
 
 function $v(id){ return document.getElementById(id); }
 function npNearest(arr,v){ return arr.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?b:a); }
@@ -1291,6 +1293,7 @@ async function openNP(){
   $v('np-qty').value='1';
   clearTimeout(_npDeb); _npDeb=null; _npSwActiveId=null;
   npPT='retail'; npRes=null; npBomRows=[]; npAccData=[]; npSelAcc=new Set(); npVariants=[];
+  npMatsByVariant=new Map(); npAllMats=new Map();
   npSelPrice('retail');
   $v('np-err').className='nf-err'; $v('np-err').textContent='';
   $v('np-width-hint').textContent='';
@@ -1445,26 +1448,19 @@ async function npUpdFields(){
     }
   }
 
-  // Загружаем материалы из pricing_rules для всей серии
+  // Загружаем материалы из pricing_rules для всей серии (с variant_id для фильтрации по ширине)
   const vids=npVariants.map(v=>v.id);
   const mats=await sbGet(
-    `pricing_rules?variant_id=in.(${vids.join(',')})&select=materials(id,code,name_short)&limit=200`
+    `pricing_rules?variant_id=in.(${vids.join(',')})&select=variant_id,materials(id,code,name_short)&limit=200`
   );
-  const seen=new Map();
-  mats.forEach(pr=>{ const m=pr.materials; if(m&&!seen.has(m.code)) seen.set(m.code,m); });
-  const matSel=$v('np-mat');
-  matSel.innerHTML='<option value="">— выберите —</option>';
-  seen.forEach(m=>{
-    const o=document.createElement('option');
-    o.value=m.code; o.textContent=m.name_short||m.code;
-    matSel.appendChild(o);
+  npMatsByVariant=new Map(); npAllMats=new Map();
+  mats.forEach(pr=>{
+    const m=pr.materials; if(!m) return;
+    if(!npMatsByVariant.has(pr.variant_id)) npMatsByVariant.set(pr.variant_id, new Set());
+    npMatsByVariant.get(pr.variant_id).add(m.code);
+    if(!npAllMats.has(m.code)) npAllMats.set(m.code, m);
   });
-  if(seen.size===1){
-    matSel.value=[...seen.keys()][0];
-    $v('np-mat-wrap').style.display='none';
-  } else {
-    $v('np-mat-wrap').style.display='';
-  }
+  npRefreshMaterials();
   // Если ширина уже введена — пересчитываем сразу
   // В режиме редактирования: применяем сохранённый материал и вибро
   if(_npEditPrefill){
@@ -1549,6 +1545,30 @@ function npGetPriceAdjust(variant, mat, base){
 
 function npErr(msg){ const e=$v('np-err'); e.textContent=msg; e.className='nf-err on'; }
 
+// Обновляет дропдаун материалов под выбранный вариант (ширина/глубина)
+function npRefreshMaterials(){
+  const variant=npGetVariant();
+  const available=variant ? npMatsByVariant.get(variant.id) : null;
+  const matSel=$v('np-mat');
+  const prevVal=matSel.value;
+  matSel.innerHTML='<option value="">— выберите —</option>';
+  const entries=available
+    ? [...npAllMats.entries()].filter(([code])=>available.has(code))
+    : [...npAllMats.entries()];
+  entries.forEach(([,m])=>{
+    const o=document.createElement('option');
+    o.value=m.code; o.textContent=m.name_short||m.code;
+    matSel.appendChild(o);
+  });
+  if(prevVal && (!available || available.has(prevVal))) matSel.value=prevVal;
+  if(entries.length===1){
+    matSel.value=entries[0][0];
+    $v('np-mat-wrap').style.display='none';
+  } else {
+    $v('np-mat-wrap').style.display=entries.length>0?'':'none';
+  }
+}
+
 // ── Динамический пересчёт ─────────────────────────────────
 let _npDeb = null;
 
@@ -1556,16 +1576,23 @@ let _npDeb = null;
 function npAutoCalc(){
   clearTimeout(_npDeb);
   _npDeb = setTimeout(()=>{
+    npRefreshMaterials();
     const variant=npGetVariant(), mat=$v('np-mat').value;
     if(variant && mat) npCalc(); else npReset();
   }, 500);
 }
 
-// Вызывается при смене материала / вибро — мгновенно
+// Вызывается при смене материала — мгновенно
 function npAutoCalcNow(){
   clearTimeout(_npDeb);
   const variant=npGetVariant(), mat=$v('np-mat').value;
   if(variant && mat) npCalc(); else npReset();
+}
+
+// Вызывается при смене виброизоляции — обновляем материалы и пересчитываем
+function npVibChanged(){
+  npRefreshMaterials();
+  npAutoCalcNow();
 }
 
 // Изменение кол-ва — только обновляем цену из кэша, BOM не перегружаем
