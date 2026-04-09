@@ -542,7 +542,6 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
       <div id="np-price-card" class="np-price-card">
         <div class="np-price-big" id="np-price-val">—</div>
         <div class="np-price-meta" id="np-price-meta"></div>
-        <div id="np-stock-badge" style="display:none;margin-top:6px;font-size:12px;font-weight:600;padding:3px 8px;border-radius:10px"></div>
       </div>
 
       <!-- Скроллируемая область: хинт / матрица / допы -->
@@ -1481,7 +1480,6 @@ function npReset(){
   $v('np-mx-block').style.display='none';
   $v('np-acc-block').style.display='none';
   $v('np-save-btn').disabled=true;
-  $v('np-stock-badge').style.display='none';
   npRes=null; npBomRows=[]; npAccData=[]; npSelAcc=new Set();
 }
 
@@ -1763,20 +1761,6 @@ function npAccRender(){
       `${fmt(unit)} ₽/шт`+(accTot?` + ${fmt(accTot)} допы`:'')+
       ` × ${qty} шт · ${npPT==='wholesale'?'Оптовая':'Розничная'}`+
       (npRes._note?` · ${npRes._note}`:'');
-    // Остатки
-    const badge=$v('np-stock-badge');
-    const stockQty=npRes.stock_qty??null;
-    if(stockQty===null){
-      badge.style.display='none';
-    } else if(stockQty>0){
-      badge.textContent=`В наличии: ${stockQty} шт`;
-      badge.className='np-stock-in';
-      badge.style.display='inline-block';
-    } else {
-      badge.textContent='Под заказ';
-      badge.className='np-stock-out';
-      badge.style.display='inline-block';
-    }
   }
 }
 
