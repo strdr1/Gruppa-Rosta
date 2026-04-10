@@ -1336,8 +1336,8 @@ function npSwBuildList(filter){
     const d = document.createElement('div');
     d.className = 'np-sw-item' + (t.id==_npSwActiveId?' active':'');
     d.dataset.id = t.id;
-    const short = t.name_short ? `<b>${t.name_short}</b> — ` : '';
-    d.innerHTML = short + t.name;
+    const short = t.name_short ? ` <span style="color:#8c9daf;font-size:11px;font-weight:500">${t.name_short}</span>` : '';
+    d.innerHTML = t.name + short;
     d.onclick = ()=>{ npSwSelect(t); };
     list.appendChild(d);
   });
