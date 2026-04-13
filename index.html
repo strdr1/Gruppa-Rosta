@@ -1237,79 +1237,67 @@ async function npSaveEdit(){
 function printKP({id,code,created_at,attrs,unit_price,total_price,qty}){
   const m    = Object.entries(MAT_NAME).find(([k])=>k===attrs?.material_code);
   const date = new Date(created_at).toLocaleDateString('ru-RU');
-  const w    = window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${code}</title>
-  <style>body{font-family:Arial,sans-serif;max-width:680px;margin:30px auto;font-size:13px;color:#1e293b}
-  .hdr{display:flex;justify-content:space-between;border-bottom:3px solid #1e3a5f;padding-bottom:12px;margin-bottom:14px}
-  .logo{font-size:20px;font-weight:900;color:#1e3a5f}.logo span{color:#e63329}
-  .contacts{text-align:right;font-size:11px;color:#64748b;line-height:1.8}
-  h1{font-size:18px;font-weight:700;margin-bottom:3px}.meta{color:#64748b;font-size:11px;margin-bottom:16px}
-  table{width:100%;border-collapse:collapse;margin-bottom:14px}
-  td{padding:8px 10px;border-bottom:1px solid #e2e8f0}td:first-child{color:#64748b;width:50%}td:last-child{font-weight:600}
-  .total{background:#f0f9ff;border-radius:6px;padding:14px 16px}
-  .tr{display:flex;justify-content:space-between;padding:3px 0;font-size:14px}
-  .tr.big{font-size:22px;font-weight:800;margin-top:8px;padding-top:10px;border-top:2px solid #bae6fd}
-  .footer{font-size:10px;color:#94a3b8;text-align:center;margin-top:20px;line-height:1.8}
-  @media print{button{display:none}}</style></head><body>
-  <div class="hdr">
-    <div><div class="logo">ГРУППА <span>РОСТА</span></div><div style="font-size:11px;color:#64748b;margin-top:3px">Лабораторная мебель от производителя</div></div>
-    <div class="contacts"><div>8 (800) 302-50-53</div><div>zakaz@gruppa-rosta.ru</div><div>gruppa-rosta.ru</div></div>
-  </div>
-  <h1>Коммерческое предложение</h1>
-  <div class="meta">№ ${code} &nbsp;|&nbsp; ${date} &nbsp;|&nbsp; Действительно 10 рабочих дней</div>
-  <table>
-    <tr><td>Изделие</td><td>${attrs?.series||'—'}</td></tr>
-    <tr><td>Размер (Ш × Г)</td><td>${attrs?.width_mm&&attrs?.depth_mm?attrs.width_mm+'×'+attrs.depth_mm+' мм':'—'}</td></tr>
-    <tr><td>Рабочая поверхность</td><td>${m?m[1]:attrs?.material_code||'—'}</td></tr>
-    <tr><td>Количество</td><td>${qty||1} шт.</td></tr>
-    <tr><td>НДС</td><td>Включён (5%)</td></tr>
-  </table>
-  <div class="total">
-    <div class="tr"><span>Цена за единицу</span><span>${fmt(unit_price)} ₽</span></div>
-    ${(qty||1)>1?`<div class="tr"><span>Количество</span><span>${qty} шт.</span></div>`:''}
-    <div class="tr big"><span>ИТОГО</span><span>${fmt(total_price)} ₽</span></div>
-  </div>
-  <div class="footer">ИП Айкин Владимир Николаевич · ИНН: 210302838016 · ОГРНИП: 315213200002795<br>
-  р/с 40802810729040004012 · ФИЛИАЛ «НИЖЕГОРОДСКИЙ» АО «АЛЬФА-БАНК» · БИК: 042202824</div>
-  <br>
-  <button onclick="window.print()">🖨 Распечатать</button>
-  <button id="btn-send-b24" onclick="sendToBitrix()" style="margin-left:10px;background:#1e3a5f;color:white;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px">📤 Отправить в Битрикс</button>
-  <span id="b24-status" style="margin-left:12px;font-size:12px;color:#64748b"></span>
-  <script>
-  const _kpData = ${JSON.stringify({
+  const kpData = JSON.stringify({
     code, created_at, unit_price, total_price, qty,
-    variant_name: npRes?.variant_name || attrs?.series || '',
-    variant_code: npRes?.variant_code || null,
+    variant_name: attrs?.series || '',
+    variant_code: (()=>{ const s=attrs?.series,w=attrs?.width_mm,d=attrs?.depth_mm,v=attrs?.vibration_class; if(!s||!w) return null; if(d&&v) return s+'-'+w+'x'+d+'-'+v; if(d) return s+'-'+w+'x'+d; return s+'-'+w; })(),
     material_code: attrs?.material_code || null,
     attrs
-  })};
-  async function sendToBitrix(){
-    const btn = document.getElementById('btn-send-b24');
-    const status = document.getElementById('b24-status');
-    btn.disabled = true; btn.textContent = '⏳ Отправка…';
-    status.textContent = '';
-    try {
-      const res = await fetch('https://n8n.ai.amsales.ru/webhook/kp-from-site', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(_kpData)
-      });
-      const json = await res.json();
-      if(json.ok){
-        btn.textContent = '✅ Отправлено';
-        status.textContent = 'Сделка #' + json.deal_id + ' создана в Битрикс24';
-        status.style.color = '#16a34a';
-      } else {
-        throw new Error(JSON.stringify(json));
-      }
-    } catch(e){
-      btn.disabled = false; btn.textContent = '📤 Отправить в Битрикс';
-      status.textContent = 'Ошибка: ' + e.message;
-      status.style.color = '#dc2626';
-    }
-  }
-  </script>
-  </body></html>`);
+  });
+  const w    = window.open('','_blank');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+code+'</title>'
+  +'<style>body{font-family:Arial,sans-serif;max-width:680px;margin:30px auto;font-size:13px;color:#1e293b}'
+  +'.hdr{display:flex;justify-content:space-between;border-bottom:3px solid #1e3a5f;padding-bottom:12px;margin-bottom:14px}'
+  +'.logo{font-size:20px;font-weight:900;color:#1e3a5f}.logo span{color:#e63329}'
+  +'.contacts{text-align:right;font-size:11px;color:#64748b;line-height:1.8}'
+  +'h1{font-size:18px;font-weight:700;margin-bottom:3px}.meta{color:#64748b;font-size:11px;margin-bottom:16px}'
+  +'table{width:100%;border-collapse:collapse;margin-bottom:14px}'
+  +'td{padding:8px 10px;border-bottom:1px solid #e2e8f0}td:first-child{color:#64748b;width:50%}td:last-child{font-weight:600}'
+  +'.total{background:#f0f9ff;border-radius:6px;padding:14px 16px}'
+  +'.tr{display:flex;justify-content:space-between;padding:3px 0;font-size:14px}'
+  +'.tr.big{font-size:22px;font-weight:800;margin-top:8px;padding-top:10px;border-top:2px solid #bae6fd}'
+  +'.footer{font-size:10px;color:#94a3b8;text-align:center;margin-top:20px;line-height:1.8}'
+  +'@media print{button{display:none}}</style></head><body>'
+  +'<div class="hdr">'
+  +'<div><div class="logo">ГРУППА <span>РОСТА</span></div><div style="font-size:11px;color:#64748b;margin-top:3px">Лабораторная мебель от производителя</div></div>'
+  +'<div class="contacts"><div>8 (800) 302-50-53</div><div>zakaz@gruppa-rosta.ru</div><div>gruppa-rosta.ru</div></div>'
+  +'</div>'
+  +'<h1>Коммерческое предложение</h1>'
+  +'<div class="meta">№ '+code+' &nbsp;|&nbsp; '+date+' &nbsp;|&nbsp; Действительно 10 рабочих дней</div>'
+  +'<table>'
+  +'<tr><td>Изделие</td><td>'+(attrs?.series||'—')+'</td></tr>'
+  +'<tr><td>Размер (Ш × Г)</td><td>'+(attrs?.width_mm&&attrs?.depth_mm?attrs.width_mm+'×'+attrs.depth_mm+' мм':'—')+'</td></tr>'
+  +'<tr><td>Рабочая поверхность</td><td>'+(m?m[1]:attrs?.material_code||'—')+'</td></tr>'
+  +'<tr><td>Количество</td><td>'+(qty||1)+' шт.</td></tr>'
+  +'<tr><td>НДС</td><td>Включён (5%)</td></tr>'
+  +'</table>'
+  +'<div class="total">'
+  +'<div class="tr"><span>Цена за единицу</span><span>'+fmt(unit_price)+' ₽</span></div>'
+  +((qty||1)>1?'<div class="tr"><span>Количество</span><span>'+qty+' шт.</span></div>':'')
+  +'<div class="tr big"><span>ИТОГО</span><span>'+fmt(total_price)+' ₽</span></div>'
+  +'</div>'
+  +'<div class="footer">ИП Айкин Владимир Николаевич · ИНН: 210302838016 · ОГРНИП: 315213200002795<br>'
+  +'р/с 40802810729040004012 · ФИЛИАЛ «НИЖЕГОРОДСКИЙ» АО «АЛЬФА-БАНК» · БИК: 042202824</div>'
+  +'<br>'
+  +'<button onclick="window.print()">🖨 Распечатать</button>'
+  +'<button id="btn-send-b24" onclick="sendToBitrix()" style="margin-left:10px;background:#1e3a5f;color:white;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px">📤 Отправить в Битрикс</button>'
+  +'<span id="b24-status" style="margin-left:12px;font-size:12px;color:#64748b"></span>'
+  +'<script>'
+  +'const _kpData='+kpData+';'
+  +'async function sendToBitrix(){'
+  +'const btn=document.getElementById("btn-send-b24");'
+  +'const status=document.getElementById("b24-status");'
+  +'btn.disabled=true;btn.textContent="⏳ Отправка…";'
+  +'status.textContent="";'
+  +'try{'
+  +'const res=await fetch("https://n8n.ai.amsales.ru/webhook/kp-from-site",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(_kpData)});'
+  +'const json=await res.json();'
+  +'if(json.ok){btn.textContent="✅ Отправлено";status.textContent="Сделка #"+json.deal_id+" создана в Битрикс24";status.style.color="#16a34a";}'
+  +'else{throw new Error(JSON.stringify(json));}'
+  +'}catch(e){btn.disabled=false;btn.textContent="📤 Отправить в Битрикс";status.textContent="Ошибка: "+e.message;status.style.color="#dc2626";}'
+  +'}'
+  +'<\/script>'
+  +'</body></html>');
   w.document.close();
 }
 
