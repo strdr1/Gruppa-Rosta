@@ -1271,7 +1271,44 @@ function printKP({id,code,created_at,attrs,unit_price,total_price,qty}){
   </div>
   <div class="footer">ИП Айкин Владимир Николаевич · ИНН: 210302838016 · ОГРНИП: 315213200002795<br>
   р/с 40802810729040004012 · ФИЛИАЛ «НИЖЕГОРОДСКИЙ» АО «АЛЬФА-БАНК» · БИК: 042202824</div>
-  <br><button onclick="window.print()">🖨 Распечатать</button>
+  <br>
+  <button onclick="window.print()">🖨 Распечатать</button>
+  <button id="btn-send-b24" onclick="sendToBitrix()" style="margin-left:10px;background:#1e3a5f;color:white;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px">📤 Отправить в Битрикс</button>
+  <span id="b24-status" style="margin-left:12px;font-size:12px;color:#64748b"></span>
+  <script>
+  const _kpData = ${JSON.stringify({
+    code, created_at, unit_price, total_price, qty,
+    variant_name: npRes?.variant_name || attrs?.series || '',
+    variant_code: npRes?.variant_code || null,
+    material_code: attrs?.material_code || null,
+    attrs
+  })};
+  async function sendToBitrix(){
+    const btn = document.getElementById('btn-send-b24');
+    const status = document.getElementById('b24-status');
+    btn.disabled = true; btn.textContent = '⏳ Отправка…';
+    status.textContent = '';
+    try {
+      const res = await fetch('https://n8n.ai.amsales.ru/webhook/kp-from-site', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(_kpData)
+      });
+      const json = await res.json();
+      if(json.ok){
+        btn.textContent = '✅ Отправлено';
+        status.textContent = 'Сделка #' + json.deal_id + ' создана в Битрикс24';
+        status.style.color = '#16a34a';
+      } else {
+        throw new Error(JSON.stringify(json));
+      }
+    } catch(e){
+      btn.disabled = false; btn.textContent = '📤 Отправить в Битрикс';
+      status.textContent = 'Ошибка: ' + e.message;
+      status.style.color = '#dc2626';
+    }
+  }
+  </script>
   </body></html>`);
   w.document.close();
 }
