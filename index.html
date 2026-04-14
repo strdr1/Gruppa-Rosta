@@ -1052,10 +1052,11 @@ function buildDealPipe(stageId){
   const steps = ['C2:NEW','C2:2','C2:6','C2:EXECUTING','C2:PREPAYMENT_INVOICE','C2:WON'];
   const labels = {'C2:NEW':'Новая','C2:2':'Клиент','C2:6':'Менеджер','C2:EXECUTING':'В работе','C2:PREPAYMENT_INVOICE':'Счёт','C2:WON':'Выиграно'};
   const cur = steps.indexOf(stageId);
-  return steps.map((s,i)=>`
-    <div class="sp-step ${i<cur?'done':i===cur?'active':''}">${labels[s]}</div>
-    ${i<steps.length-1?`<div class="sp-line ${i<cur?'done':''}"></div>`:''}`
-  ).join('');
+  return steps.map(function(s,i){
+    const cls = i<cur?'done':i===cur?'active':'';
+    const line = i<steps.length-1 ? '<div class="sp-line '+(i<cur?'done':'')+'"></div>' : '';
+    return '<div class="sp-step '+cls+'">'+labels[s]+'</div>'+line;
+  }).join('');
 }
 
 // ═══ ЗАГЛУШКИ УДАЛЁННЫХ ФУНКЦИЙ ════════════
@@ -1082,10 +1083,11 @@ function buildPipe(status){
   const steps = ['draft','clarifying','calculated','sent'];
   const labels = {draft:'Черновик', clarifying:'Уточнение', calculated:'Рассчитано', sent:'Отправлено'};
   const cur = steps.indexOf(status);
-  return steps.map((s,i)=>`
-    <div class="sp-step ${i<cur?'done':i===cur?'active':''}">${labels[s]}</div>
-    ${i<steps.length-1?`<div class="sp-line ${i<cur?'done':''}"></div>`:''}`
-  ).join('');
+  return steps.map(function(s,i){
+    const cls = i<cur?'done':i===cur?'active':'';
+    const line = i<steps.length-1 ? '<div class="sp-line '+(i<cur?'done':'')+'"></div>' : '';
+    return '<div class="sp-step '+cls+'">'+labels[s]+'</div>'+line;
+  }).join('');
 }
 
 // ═══ РЕДАКТИРОВАНИЕ СУЩЕСТВУЮЩЕЙ ЗАЯВКИ ═════
