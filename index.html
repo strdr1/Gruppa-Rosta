@@ -789,8 +789,8 @@ async function lkRenderDetail(id){
     const total = item.total_price||(item.unit_price*qty);
     estimateHTML = `<div class="lk-estimate" style="margin:0 22px 14px">
       <div class="lk-est-title">✅ Расчёт готов</div>
-      ${attrs.series?`<div class="lk-est-row"><span>${esc(attrs.series)}${attrs.width_mm?` ${attrs.width_mm}×${attrs.depth_mm}`:''}</span><span style="font-weight:600">${fmt(item.unit_price)} ₽/шт.</span></div>`:''}
-      ${qty>1?`<div class="lk-est-row"><span>Количество</span><span style="font-weight:600">${qty} шт.</span></div>`:''}
+      ${attrs.series?('<div class="lk-est-row"><span>'+esc(attrs.series)+(attrs.width_mm?' '+attrs.width_mm+'×'+attrs.depth_mm:'')+'</span><span style="font-weight:600">'+fmt(item.unit_price)+' ₽/шт.</span></div>'):''}
+      ${qty>1?('<div class="lk-est-row"><span>Количество</span><span style="font-weight:600">'+qty+' шт.</span></div>'):''}
       <div class="lk-est-total">
         <span class="lk-est-total-label">Итого</span>
         <span class="lk-est-total-price">${fmt(total)} ₽</span>
@@ -831,7 +831,7 @@ async function lkRenderDetail(id){
           </div>
           <span class="badge ${st.cls}" style="font-size:12px;padding:4px 12px">${st.label}</span>
         </div>
-        ${p.raw_request?`<div class="lk-oi-desc">"${esc(p.raw_request.slice(0,120))}"</div>`:''}
+        ${p.raw_request?('<div class="lk-oi-desc">"'+esc(p.raw_request.slice(0,120))+'"</div>'):''}
         <div class="lk-status-row">
           <div class="lk-st-dot ${p.status}"></div>
           <div class="lk-st-text">${st.label}</div>
@@ -991,9 +991,9 @@ async function renderRight(id){
       <div class="oc-meta">
         <span>🆔 #${p.id}</span>
         <span>🕐 ${fmtD(p.date_create)}</span>
-        ${p.opportunity ? `<span>💰 ${fmt(p.opportunity)} ₽</span>` : ''}
+        ${p.opportunity ? ('<span>💰 '+fmt(p.opportunity)+' ₽</span>') : ''}
       </div>
-      ${p.comments ? `<div class="oc-raw">${esc(p.comments.slice(0,200))}</div>` : ''}
+      ${p.comments ? ('<div class="oc-raw">'+esc(p.comments.slice(0,200))+'</div>') : ''}
     </div>
     <div class="oc-sec">
       <div class="oc-sec-label">Действия</div>
@@ -1064,20 +1064,6 @@ function markSent(){}
 function deleteProject(){}
 function recalculate(){}
 
-// ═══ ПРАВАЯ ПАНЕЛЬ (СТАРАЯ — не используется) ════════
-function _renderRight_OLD(id){
-  const p    = projects.find(x=>String(x.id)===String(id));
-  if(!p){
-    const r = document.getElementById('right');
-    r.style.cssText = 'overflow-y:auto;padding:24px;height:100%';
-    return;
-  }
-
-  const rightEl = document.getElementById('right');
-  rightEl.style.cssText = 'overflow:hidden;padding:0;height:100%';
-  rightEl.innerHTML = `<div class="detail-split">
-    <div class="detail-left">
-      <div class="oc">
 // buildPipe оставляем для совместимости с ЛК
 function buildPipe(status){
   const steps = ['draft','clarifying','calculated','sent'];
@@ -1115,7 +1101,7 @@ async function editProject(id){
   // Находим product_type по series через БД, затем выбираем
   if(a.series){
     try{
-      const vRes = await sbGet(`product_variants?series=eq.${a.series}&is_active=eq.true&limit=1&select=product_type_id`);
+      const vRes = await sbGet('product_variants?series=eq.'+a.series+'&is_active=eq.true&limit=1&select=product_type_id');
       const ptId = vRes?.[0]?.product_type_id;
       const type = ptId && (_npTypes||[]).find(t=>t.id===ptId);
       if(type) npSwSelect(type); // запускает npUpdFields, который применит _npEditPrefill
@@ -1143,12 +1129,12 @@ async function npSaveEdit(){
   const btn=$v('np-save-btn');
   btn.disabled=true; btn.textContent='Сохранение...';
   try{
-    await sbPatch(`project_items?id=eq.${item.id}`,{
+    await sbPatch('project_items?id=eq.'+item.id,{
       filled_attrs:attrs, quantity:qty,
       unit_price:npRes._unit, total_price:npRes._unit*qty,
       status:'complete', missing_attrs:[]
     });
-    await sbPatch(`projects?id=eq.${_npEditMode}`,{status:'calculated'});
+    await sbPatch('projects?id=eq.'+_npEditMode,{status:'calculated'});
     closeNP(); await loadProjects(dealSearchQ); renderRight(_npEditMode);
   }catch(e){ npErr('Ошибка: '+e.message); btn.disabled=false; btn.textContent='Сохранить изменения'; }
 }
@@ -1280,7 +1266,7 @@ function npSwBuildList(filter){
     const d = document.createElement('div');
     d.className = 'np-sw-item' + (t.id==_npSwActiveId?' active':'');
     d.dataset.id = t.id;
-    const short = t.name_short ? ` <span style="color:#8c9daf;font-size:11px;font-weight:500">${t.name_short}</span>` : '';
+    const short = t.name_short ? ' <span style="color:#8c9daf;font-size:11px;font-weight:500">'+t.name_short+'</span>' : '';
     d.innerHTML = t.name + short;
     d.onclick = ()=>{ npSwSelect(t); };
     list.appendChild(d);
@@ -1301,7 +1287,7 @@ function npSwFilter(){
 function npSwSelect(t){
   _npSwActiveId = t.id;
   $v('np-series').value = t.id;
-  const short = t.name_short ? `${t.name_short} — ` : '';
+  const short = t.name_short ? t.name_short+' — ' : '';
   $v('np-series-search').value = short + t.name;
   $v('np-sw-list').classList.remove('open');
   npUpdFields();
@@ -1353,8 +1339,8 @@ async function npUpdFields(){
 
   // Загружаем варианты для выбранного типа
   npVariants=await sbGet(
-    `product_variants?product_type_id=eq.${ptId}&is_active=eq.true`+
-    `&order=width_mm,depth_mm&select=id,code,series,width_mm,depth_mm`
+    'product_variants?product_type_id=eq.'+ptId+'&is_active=eq.true'+
+    '&order=width_mm,depth_mm&select=id,code,series,width_mm,depth_mm'
   );
   if(!npVariants.length){
     $v('np-idle-hint').style.display='';
@@ -1388,7 +1374,7 @@ async function npUpdFields(){
     }).filter(v=>v&&parseInt(v)<200))].sort((a,b)=>+a-+b);
     if(extraVals.length){
       const vibSel=$v('np-vib');
-      vibSel.innerHTML=extraVals.map(v=>`<option value="${v}">${v} мм</option>`).join('');
+      vibSel.innerHTML=extraVals.map(v=>'<option value="'+v+'">'+v+' мм</option>').join('');
       vibSel.value=extraVals[0];
       $v('np-vib-wrap').style.display='';
     }
@@ -1397,7 +1383,7 @@ async function npUpdFields(){
   // Загружаем материалы из pricing_rules для всей серии (с variant_id для фильтрации по ширине)
   const vids=npVariants.map(v=>v.id);
   const mats=await sbGet(
-    `pricing_rules?variant_id=in.(${vids.join(',')})&select=variant_id,materials(id,code,name_short)&limit=200`
+    'pricing_rules?variant_id=in.('+vids.join(',')+')&select=variant_id,materials(id,code,name_short)&limit=200'
   );
   npMatsByVariant=new Map(); npAllMats=new Map();
   mats.forEach(pr=>{
@@ -1435,7 +1421,7 @@ function npGetVariant(){
   const widths=[...new Set(npVariants.map(v=>v.width_mm))].sort((a,b)=>a-b);
   const nearW=npNearest(widths,wRaw);
   const wh=$v('np-width-hint');
-  if(wh && wRaw!==nearW) wh.textContent=`Ближайший стандарт: ${nearW} мм, цена пересчитана`;
+  if(wh && wRaw!==nearW) wh.textContent='Ближайший стандарт: '+nearW+' мм, цена пересчитана';
   let filtered=npVariants.filter(v=>v.width_mm===nearW);
   // Глубина
   const hasDepth=filtered.some(v=>v.depth_mm);
@@ -1480,13 +1466,13 @@ function npGetPriceAdjust(variant, mat, base){
     const pCust=Math.max(npSheetPieces(cW,cD||stdD),1);
     const delta=Math.round(SHEET_PRICE/pCust - SHEET_PRICE/pStd);
     const unit=Math.round(base+delta);
-    return {unit, note:`Раскрой: стандарт ${pStd}шт/лист, ваш размер ${pCust}шт/лист`};
+    return {unit, note:'Раскрой: стандарт '+pStd+'шт/лист, ваш размер '+pCust+'шт/лист'};
   } else {
     const dW=wRaw&&stdW?Math.round((wRaw-stdW)/100):0;
     const dD=dRaw&&stdD?Math.round((dRaw-stdD)/100):0;
     const inc=(dW+dD)*400;
     const unit=Math.round(base+inc);
-    const note=inc!==0?`Нестандарт ${inc>0?'+':''}${fmt(inc)} ₽ к стандарту`:null;
+    const note=inc!==0?'Нестандарт '+(inc>0?'+':'')+fmt(inc)+' ₽ к стандарту':null;
     return {unit, note};
   }
 }
@@ -1585,8 +1571,8 @@ async function npCalc(fromBtn=false){
     // Показываем цену
     $v('np-price-val').textContent=fmt(unit*qty)+' ₽';
     $v('np-price-meta').textContent=
-      `${fmt(unit)} ₽/шт × ${qty} шт · ${npPT==='wholesale'?'Оптовая':'Розничная'}`+
-      (note?` · ${note}`:'');
+      fmt(unit)+' ₽/шт × '+qty+' шт · '+(npPT==='wholesale'?'Оптовая':'Розничная')+
+      (note?' · '+note:'');
     $v('np-price-card').style.display='block';
     $v('np-idle-hint').style.display='none';
     $v('np-save-btn').disabled=false;
@@ -1639,7 +1625,7 @@ async function npLoadMatrix(vid, mid, scale){
   try{
     npAccData=[]; npSelAcc=new Set();
     const rows=await sbGet(
-      `accessory_variants?variant_id=eq.${vid}&select=accessories(id,name,price_retail,price_wholesale)&limit=60`
+      'accessory_variants?variant_id=eq.'+vid+'&select=accessories(id,name,price_retail,price_wholesale)&limit=60'
     );
     const seen=new Set();
     npAccData=rows
@@ -1655,16 +1641,16 @@ function npMxRender(){
     const r=npBomRows[i];
     if(r.cat!==lastCat){
       lastCat=r.cat;
-      html+=`<tr class="mx-cat"><td colspan="5">${esc(r.cat||'Прочее')}</td></tr>`;
+      html+='<tr class="mx-cat"><td colspan="5">'+esc(r.cat||'Прочее')+'</td></tr>';
     }
     const cost=Math.round(r.qty*r.price);
-    html+=`<tr class="mx-row">
-      <td class="mx-name" title="${esc(r.name)}">${esc(r.name)}</td>
-      <td class="mx-r">${esc(r.unit)}</td>
-      <td class="mx-r"><input type="number" class="mx-qty" value="${r.qty}" step="0.01" min="0" oninput="npMxEdit(${i},this.value)"></td>
-      <td class="mx-r">${fmt(r.price)}</td>
-      <td class="mx-cost" id="mxc${i}">${fmt(cost)} ₽</td>
-    </tr>`;
+    html+='<tr class="mx-row">'
+      +'<td class="mx-name" title="'+esc(r.name)+'">'+esc(r.name)+'</td>'
+      +'<td class="mx-r">'+esc(r.unit)+'</td>'
+      +'<td class="mx-r"><input type="number" class="mx-qty" value="'+r.qty+'" step="0.01" min="0" oninput="npMxEdit('+i+',this.value)"></td>'
+      +'<td class="mx-r">'+fmt(r.price)+'</td>'
+      +'<td class="mx-cost" id="mxc'+i+'">'+fmt(cost)+' ₽</td>'
+      +'</tr>';
   }
   $v('np-mx-body').innerHTML=html;
   npMxRecalc();
@@ -1686,25 +1672,25 @@ function npMxRecalc(){
 
 function npAccRender(){
   const pf=npPT==='wholesale'?'price_wholesale':'price_retail';
-  $v('np-acc-list').innerHTML=npAccData.map(a=>`
-    <div class="mx-acc-item${npSelAcc.has(a.id)?' on':''}" onclick="npAccToggle(${a.id})">
-      <div class="mx-acc-cb">${npSelAcc.has(a.id)?'✓':''}</div>
-      <div class="mx-acc-name" title="${esc(a.name)}">${esc(a.name)}</div>
-      <div class="mx-acc-price">+${fmt(a[pf]||a.price_retail)} ₽</div>
-    </div>`).join('');
+  $v('np-acc-list').innerHTML=npAccData.map(function(a){
+    return '<div class="mx-acc-item'+(npSelAcc.has(a.id)?' on':'')+'" onclick="npAccToggle('+a.id+')">'
+      +'<div class="mx-acc-cb">'+(npSelAcc.has(a.id)?'✓':'')+'</div>'
+      +'<div class="mx-acc-name" title="'+esc(a.name)+'">'+esc(a.name)+'</div>'
+      +'<div class="mx-acc-price">+'+fmt(a[pf]||a.price_retail)+' ₽</div>'
+      +'</div>';
+  }).join('');
   const accTot=npAccData.filter(a=>npSelAcc.has(a.id)).reduce((s,a)=>s+(a[pf]||a.price_retail||0),0);
-  $v('np-acc-total').textContent=accTot?`Допы: +${fmt(accTot)} ₽`:'';
+  $v('np-acc-total').textContent=accTot?'Допы: +'+fmt(accTot)+' ₽':'';
   // Обновляем главную цену с учётом допов
   if(npRes?._unit!=null){
     const qty=parseInt($v('np-qty').value)||1;
     const unit=npRes._unit;
     const total=(unit+accTot)*qty;
-    const scale=npRes._scale||1;
     $v('np-price-val').textContent=fmt(total)+' ₽';
     $v('np-price-meta').textContent=
-      `${fmt(unit)} ₽/шт`+(accTot?` + ${fmt(accTot)} допы`:'')+
-      ` × ${qty} шт · ${npPT==='wholesale'?'Оптовая':'Розничная'}`+
-      (npRes._note?` · ${npRes._note}`:'');
+      fmt(unit)+' ₽/шт'+(accTot?' + '+fmt(accTot)+' допы':'')+
+      ' × '+qty+' шт · '+(npPT==='wholesale'?'Оптовая':'Розничная')+
+      (npRes._note?' · '+npRes._note:'');
   }
 }
 
@@ -1737,9 +1723,9 @@ async function npSave(){
   if(selAcc.length) attrs.accessories=selAcc.map(a=>({id:a.id,name:a.name,price:a[pf]||a.price_retail}));
   const raw=[
     npRes.variant_name||variant?.series||'',
-    d?`${w}×${d} мм`:`${w} мм`,
+    d?(w+'×'+d+' мм'):(w+' мм'),
     MAT_NAME[mat]||mat,
-    qty>1?`${qty} шт.`:'',
+    qty>1?(qty+' шт.'):'',
     selAcc.map(a=>a.name).join(', '),
     $v('np-notes').value.trim()
   ].filter(Boolean).join(', ');
@@ -1805,10 +1791,10 @@ async function cwRefresh(){
   el.innerHTML = msgs.map(m=>{
     const out = m.direction==='outgoing';
     const fromTg = m.structured_data && m.structured_data.source==='telegram';
-    return `<div class="cw-bubble ${out?'out':'in'}">
-      <div class="cw-text">${esc(m.message_text||'')}</div>
-      <div class="cw-time">${fromTg?tgSvg:''}<span>${fmtT(m.created_at)}</span>${out&&!fromTg?'<span style="color:#2AABEE;font-size:9px">Менеджер</span>':''}</div>
-    </div>`;
+    return '<div class="cw-bubble '+(out?'out':'in')+'">'
+      +'<div class="cw-text">'+esc(m.message_text||'')+'</div>'
+      +'<div class="cw-time">'+(fromTg?tgSvg:'')+'<span>'+fmtT(m.created_at)+'</span>'+(out&&!fromTg?'<span style="color:#2AABEE;font-size:9px">Менеджер</span>':'')+'</div>'
+      +'</div>';
   }).join('');
   if(prev) el.scrollTop = el.scrollHeight;
 }
