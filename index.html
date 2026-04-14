@@ -392,10 +392,7 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
             oninput="onDealSearch(this.value)">
         </div>
         <div class="filters">
-          <div class="f-pill on" onclick="setFilter('all',this)">Все</div>
-          <div class="f-pill" onclick="setFilter('NEW',this)">Новые</div>
-          <div class="f-pill" onclick="setFilter('IN_PROCESS',this)">В работе</div>
-          <div class="f-pill" onclick="setFilter('WON',this)">Выиграно</div>
+          <div class="f-pill on" onclick="setFilter('C2:NEW',this)">Новые</div>
         </div>
         <button class="np-btn" onclick="openNP()">+ Новая заявка</button>
       </div>
@@ -648,7 +645,7 @@ const TG_TOKEN = '8090054234:AAHnoNv7Vt3LrK7pbPXPMB5Xcmvxgc3WIBc';
 const N8N_BASE = 'https://n8n.ai.amsales.ru/webhook';
 let projects  = [];   // сделки из Битрикс
 let activeId  = null;
-let listFilter= 'all';
+let listFilter= 'C2:NEW';
 let pollTimer = null;
 let dealSearchQ = '';
 let dealSearchTimer = null;
@@ -930,10 +927,7 @@ function setFilter(f, el){
 }
 
 function renderList(){
-  const list = projects.filter(p => {
-    if(listFilter==='all') return true;
-    return p.stage_id === 'C2:'+listFilter || p.stage_id === listFilter;
-  });
+  const list = projects;
   const el = document.getElementById('plist');
 
   if(!list.length){
