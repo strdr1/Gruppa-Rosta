@@ -47,6 +47,8 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .badge-clarify  {background:#fff1e0;color:#aa5f2a}
 .badge-calc     {background:#e2f3e8;color:#1a6f4b}
 .badge-sent     {background:#e0eeff;color:#2155a0}
+.badge-won      {background:#d1fae5;color:#065f46}
+.badge-lose     {background:#fde8e8;color:#9b1c1c}
 
 /* ── ПУСТОЕ СОСТОЯНИЕ ── */
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;color:#8c9daf;gap:10px;text-align:center}
@@ -382,14 +384,18 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
     <div class="left">
       <div class="list-head">
         <div class="list-title">
-          Заявки
+          Сделки Битрикс24
+        </div>
+        <div style="margin-bottom:8px">
+          <input id="deal-search" type="text" placeholder="Поиск по названию…"
+            style="width:100%;padding:6px 10px;border:1px solid #dde5ee;border-radius:8px;font-size:12px;outline:none"
+            oninput="onDealSearch(this.value)">
         </div>
         <div class="filters">
           <div class="f-pill on" onclick="setFilter('all',this)">Все</div>
-          <div class="f-pill" onclick="setFilter('draft',this)">Новые</div>
-          <div class="f-pill" onclick="setFilter('clarifying',this)">Уточнение</div>
-          <div class="f-pill" onclick="setFilter('calculated',this)">Готово</div>
-          <div class="f-pill" onclick="setFilter('sent',this)">Отправлено</div>
+          <div class="f-pill" onclick="setFilter('NEW',this)">Новые</div>
+          <div class="f-pill" onclick="setFilter('IN_PROCESS',this)">В работе</div>
+          <div class="f-pill" onclick="setFilter('WON',this)">Выиграно</div>
         </div>
         <button class="np-btn" onclick="openNP()">+ Новая заявка</button>
       </div>
@@ -619,19 +625,33 @@ const MISS_LABEL = {
   series:'Серия стола', width_mm:'Ширина (мм)', depth_mm:'Глубина (мм)',
   material_code:'Материал поверхности', quantity:'Количество', price_type:'Тип цены'
 };
+// Статусы из Supabase (устаревшие, для ЛК)
 const ST = {
   draft:      {label:'Черновик',    cls:'badge-draft'},
   clarifying: {label:'Уточнение',   cls:'badge-clarify'},
   calculated: {label:'Рассчитано',  cls:'badge-calc'},
   sent:       {label:'Отправлено',  cls:'badge-sent'},
 };
+// Статусы Битрикс24 воронки C2
+const B24_STAGE = {
+  'C2:NEW':                  {label:'Новая',           cls:'badge-draft'},
+  'C2:2':                    {label:'Клиент',          cls:'badge-clarify'},
+  'C2:6':                    {label:'Менеджер',        cls:'badge-clarify'},
+  'C2:EXECUTING':            {label:'В работе',        cls:'badge-calc'},
+  'C2:PREPAYMENT_INVOICE':   {label:'Счёт выставлен',  cls:'badge-sent'},
+  'C2:WON':                  {label:'Выиграно',        cls:'badge-won'},
+  'C2:LOSE':                 {label:'Проигрыш',        cls:'badge-lose'},
+};
 
 // ═══ STATE ══════════════════════════════════
 const TG_TOKEN = '8090054234:AAHnoNv7Vt3LrK7pbPXPMB5Xcmvxgc3WIBc';
-let projects  = [];
+const N8N_BASE = 'https://n8n.ai.amsales.ru/webhook';
+let projects  = [];   // сделки из Битрикс
 let activeId  = null;
 let listFilter= 'all';
 let pollTimer = null;
+let dealSearchQ = '';
+let dealSearchTimer = null;
 
 // LK state
 let lkPhone   = localStorage.getItem('lk_phone') || null;
@@ -849,7 +869,7 @@ async function lkSend(id){
     });
     const p = projects.find(x=>String(x.id)===String(id));
     if(p && p.status==='draft') await sbPatch(`projects?id=eq.${id}`,{status:'clarifying'});
-    await loadProjects();
+    await loadProjects(dealSearchQ);
     lkRenderDetail(id);
   } catch(e){
     // Демо — добавить локально
@@ -873,22 +893,32 @@ async function lkNewOrder(){
       source: 'lk', raw_request: text, status: 'draft',
       code, manager_chat_id: lkPhone
     });
-    await loadProjects();
+    await loadProjects(dealSearchQ);
     const newId = Array.isArray(res)?res[0]?.id:res?.id;
     if(newId) lkPickOrder(newId);
   } catch(e){ alert('Ошибка: '+e.message); }
 }
 
 // ═══ ЗАГРУЗКА ═══════════════════════════════
-async function loadProjects(){
+async function loadProjects(q){
+  const el = document.getElementById('plist');
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;color:#8c9daf;font-size:13px;padding:16px 6px"><div class="spinner"></div> Загрузка…</div>';
   try {
-    const data = await sbGet('projects?select=*,project_items(*)&order=created_at.desc&is_active=eq.true');
-    projects = data;
+    const url = N8N_BASE + '/deals' + (q ? '?q='+encodeURIComponent(q) : '');
+    const r = await fetch(url);
+    const data = await r.json();
+    projects = data.deals || [];
   } catch(e) {
     projects = [];
   }
   renderList();
   if(activeId) renderRight(activeId);
+}
+
+function onDealSearch(val){
+  clearTimeout(dealSearchTimer);
+  dealSearchQ = val.trim();
+  dealSearchTimer = setTimeout(()=>loadProjects(dealSearchQ), 400);
 }
 
 // ═══ СПИСОК ══════════════════════════════════
@@ -900,37 +930,29 @@ function setFilter(f, el){
 }
 
 function renderList(){
-  const list = projects.filter(p => listFilter==='all' || p.status===listFilter);
-  const el   = document.getElementById('plist');
+  const list = projects.filter(p => {
+    if(listFilter==='all') return true;
+    return p.stage_id === 'C2:'+listFilter || p.stage_id === listFilter;
+  });
+  const el = document.getElementById('plist');
 
   if(!list.length){
-    el.innerHTML = '<div style="color:#8c9daf;font-size:12px;padding:14px 6px;text-align:center">Нет заявок</div>';
+    el.innerHTML = '<div style="color:#8c9daf;font-size:12px;padding:14px 6px;text-align:center">Нет сделок</div>';
     return;
   }
 
   el.innerHTML = list.map(p=>{
-    const item  = p.project_items?.[0];
-    const attrs = item?.filled_attrs || {};
-    const miss  = item?.missing_attrs || [];
-    const st    = ST[p.status] || ST.draft;
-    const active= String(p.id)===String(activeId);
-
-    const desc = [
-      attrs.series,
-      attrs.width_mm && attrs.depth_mm ? `${attrs.width_mm}×${attrs.depth_mm}` : null,
-      attrs.material_code ? (MAT_NAME[attrs.material_code]||attrs.material_code).split(' ')[0] : null,
-    ].filter(Boolean).join(' · ') || (p.raw_request||'—').slice(0,50);
-
-    const priceStr = item?.total_price ? `💰 ${fmt(item.total_price)} ₽` :
-                     miss.length       ? `❓ ${miss.length} не хватает` : '⏳';
+    const st     = B24_STAGE[p.stage_id] || {label:p.stage_id||'—', cls:'badge-draft'};
+    const active = String(p.id)===String(activeId);
+    const price  = p.opportunity ? '💰 '+fmt(p.opportunity)+' ₽' : '—';
 
     return `<div class="pcard${active?' active':''}" onclick="pick('${p.id}')">
       <div class="pc-top">
-        <span class="pc-code">${esc(p.code||'—')}</span>
+        <span class="pc-code" style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.title||'—')}</span>
         <span class="badge ${st.cls}">${st.label}</span>
       </div>
-      <div class="pc-desc">${esc(desc)}</div>
-      <div class="pc-bottom"><span>${priceStr}</span><span>${fmtD(p.created_at)}</span></div>
+      <div class="pc-desc">${price}</div>
+      <div class="pc-bottom"><span>#${p.id}</span><span>${fmtD(p.date_create)}</span></div>
     </div>`;
   }).join('');
 }
@@ -942,13 +964,107 @@ async function pick(id){
   await renderRight(id);
   if(pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(async()=>{
-    await loadProjects();
+    await loadProjects(dealSearchQ);
     if(activeId) renderRight(activeId);
-  }, 15000);
+  }, 30000);
 }
 
-// ═══ ПРАВАЯ ПАНЕЛЬ — 8 ЭЛЕМЕНТОВ ТЗ ════════
+// ═══ ПРАВАЯ ПАНЕЛЬ — карточка сделки Битрикс ════════
 async function renderRight(id){
+  const p = projects.find(x=>String(x.id)===String(id));
+  const rightEl = document.getElementById('right');
+  if(!p){
+    rightEl.style.cssText = 'overflow-y:auto;padding:24px;height:100%';
+    return;
+  }
+
+  const st = B24_STAGE[p.stage_id] || {label:p.stage_id||'—', cls:'badge-draft'};
+  const b24url = 'https://cz-mebel.bitrix24.ru/crm/deal/details/'+p.id+'/';
+
+  rightEl.style.cssText = 'overflow-y:auto;padding:24px;height:100%';
+  rightEl.innerHTML = `<div class="oc">
+    <div class="oc-head">
+      <div class="oc-head-top">
+        <div class="oc-code" style="font-size:16px">${esc(p.title||'—')}</div>
+        <span class="badge ${st.cls}" style="font-size:12px;padding:4px 12px">${st.label}</span>
+      </div>
+      <div class="oc-meta">
+        <span>🆔 #${p.id}</span>
+        <span>🕐 ${fmtD(p.date_create)}</span>
+        ${p.opportunity ? `<span>💰 ${fmt(p.opportunity)} ₽</span>` : ''}
+      </div>
+      ${p.comments ? `<div class="oc-raw">${esc(p.comments.slice(0,200))}</div>` : ''}
+    </div>
+    <div class="oc-sec">
+      <div class="oc-sec-label">Действия</div>
+      <div class="oc-actions" style="margin-top:8px">
+        <a href="${b24url}" target="_blank" class="btn primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px">🔗 Открыть в Битрикс24</a>
+        <button class="btn" onclick="openNPforDeal('${id}')">✏️ Добавить товар</button>
+      </div>
+    </div>
+    <div class="oc-sec" id="deal-products-${id}">
+      <div class="oc-sec-label">Товары в сделке</div>
+      <div style="color:#8c9daf;font-size:12px">Загрузка…</div>
+    </div>
+  </div>`;
+
+  // Загружаем товары сделки
+  loadDealProducts(id);
+}
+
+async function loadDealProducts(dealId){
+  const sec = document.getElementById('deal-products-'+dealId);
+  if(!sec) return;
+  try {
+    const r = await fetch('https://cz-mebel.bitrix24.ru/rest/1830/w2wxftu6fa0yecy7/crm.deal.productrows.get?id='+dealId);
+    const data = await r.json();
+    const rows = data.result || [];
+    if(!rows.length){
+      sec.innerHTML = '<div class="oc-sec-label">Товары в сделке</div><div style="color:#8c9daf;font-size:12px">Товаров нет</div>';
+      return;
+    }
+    const total = rows.reduce((s,r)=>s+(parseFloat(r.PRICE||0)*parseFloat(r.QUANTITY||1)),0);
+    sec.innerHTML = '<div class="oc-sec-label">Товары в сделке</div>'
+      + rows.map(r=>`<div class="oc-row">
+          <span class="oc-row-k">${esc(r.PRODUCT_NAME||'—')} × ${r.QUANTITY||1} шт.</span>
+          <span class="oc-row-v">${fmt(parseFloat(r.PRICE||0)*parseFloat(r.QUANTITY||1))} ₽</span>
+        </div>`).join('')
+      + `<div class="oc-row" style="border-top:2px solid #e3eaf2;margin-top:6px;padding-top:8px">
+          <span class="oc-row-k" style="font-weight:700">Итого</span>
+          <span class="oc-row-v" style="font-size:16px">${fmt(total)} ₽</span>
+        </div>`;
+  } catch(e){
+    if(sec) sec.innerHTML = '<div class="oc-sec-label">Товары в сделке</div><div style="color:#c0392b;font-size:12px">Ошибка загрузки</div>';
+  }
+}
+
+function openNPforDeal(dealId){
+  // Открываем форму новой заявки — при сохранении прикрепим к этой сделке
+  window._attachToDeal = dealId;
+  openNP();
+  document.querySelector('.np-hdr h3').textContent = '➕ Добавить товар в сделку #'+dealId;
+}
+
+// заглушка чтобы старые функции не падали
+async function loadMsgs(){ return []; }
+
+function buildDealPipe(stageId){
+  const steps = ['C2:NEW','C2:2','C2:6','C2:EXECUTING','C2:PREPAYMENT_INVOICE','C2:WON'];
+  const labels = {'C2:NEW':'Новая','C2:2':'Клиент','C2:6':'Менеджер','C2:EXECUTING':'В работе','C2:PREPAYMENT_INVOICE':'Счёт','C2:WON':'Выиграно'};
+  const cur = steps.indexOf(stageId);
+  return steps.map((s,i)=>`
+    <div class="sp-step ${i<cur?'done':i===cur?'active':''}">${labels[s]}</div>
+    ${i<steps.length-1?`<div class="sp-line ${i<cur?'done':''}"></div>`:''}`
+  ).join('');
+}
+
+// ═══ ЗАГЛУШКИ УДАЛЁННЫХ ФУНКЦИЙ ════════════
+function markSent(){}
+function deleteProject(){}
+function recalculate(){}
+
+// ═══ ПРАВАЯ ПАНЕЛЬ (СТАРАЯ — не используется) ════════
+function _renderRight_OLD(id){
   const p    = projects.find(x=>String(x.id)===String(id));
   if(!p){
     const r = document.getElementById('right');
@@ -956,125 +1072,12 @@ async function renderRight(id){
     return;
   }
 
-  const msgs  = await loadMsgs(id);
-  const item  = p.project_items?.[0];
-  const attrs = item?.filled_attrs || {};
-  const miss  = item?.missing_attrs || [];
-  const st    = ST[p.status] || ST.draft;
-
-
-  // ── ПАРАМЕТРЫ ────────────────────────────
-  const paramRows = [];
-  if(attrs.series)        paramRows.push(['Серия', esc(attrs.series)]);
-  if(attrs.width_mm)      paramRows.push(['Размер', `${attrs.width_mm} × ${attrs.depth_mm||'?'} мм`]);
-  if(attrs.material_code) paramRows.push(['Поверхность', esc(MAT_NAME[attrs.material_code]||attrs.material_code)]);
-  if(attrs.quantity)      paramRows.push(['Количество', `${attrs.quantity} шт.`]);
-  if(attrs.price_type)    paramRows.push(['Тип цены', attrs.price_type==='wholesale'?'Оптовая':'Розничная']);
-  const totalP = paramRows.length + miss.length;
-  const pct = totalP ? Math.round(paramRows.length/totalP*100) : 0;
-
-  // ── СМЕТА ────────────────────────────────
-  let estimateSec = '';
-  if(item && item.unit_price){
-    const qty2  = attrs.quantity||item.quantity||1;
-    const tot2  = item.total_price||(item.unit_price*qty2);
-    const kp    = JSON.stringify({id,code:p.code,created_at:p.created_at,attrs,unit_price:item.unit_price,total_price:tot2,qty:qty2});
-    estimateSec = `
-      <div class="oc-sec">
-        <div class="oc-sec-label">Смета</div>
-        <div class="oc-row"><span class="oc-row-k">${esc(attrs.series||'Позиция')}${attrs.width_mm?' '+attrs.width_mm+'×'+(attrs.depth_mm||'?'):''}${attrs.material_code?' · '+(MAT_NAME[attrs.material_code]||attrs.material_code):''}</span><span class="oc-row-v">${fmt(item.unit_price)} ₽/шт.</span></div>
-        ${qty2>1?`<div class="oc-row"><span class="oc-row-k">Количество</span><span class="oc-row-v">${qty2} шт.</span></div>`:''}
-        ${qty2>1?`<div class="oc-row"><span class="oc-row-k">Сумма</span><span class="oc-row-v">${fmt(item.unit_price*qty2)} ₽</span></div>`:''}
-        <div class="oc-row"><span class="oc-row-k">НДС 5%</span><span class="oc-row-v" style="color:#16a34a">включён</span></div>
-      </div>
-      <div class="oc-total">
-        <span class="oc-total-label">Итого</span>
-        <span class="oc-total-price">${fmt(tot2)} ₽</span>
-      </div>
-      <div class="oc-actions">
-        <button class="btn primary" onclick='printKP(${kp})'>🖨 КП (PDF)</button>
-        <button class="btn" onclick="markSent('${id}')">📤 Отправлено</button>
-        <button class="btn" onclick="editProject('${id}')">✏️ Редактировать</button>
-        <button class="btn-recalc" id="btn-recalc" onclick="recalculate('${id}')">🔄 Пересчитать</button>
-        <button class="btn" onclick="deleteProject('${id}')" style="margin-left:auto;color:#c0392b;border-color:#f5c6cb">🗑 Удалить</button>
-      </div>`;
-  } else {
-    estimateSec = `
-      <div class="oc-sec" style="color:#8c9daf;font-size:13px">
-        ${miss.length ? '⏳ Уточняем: '+miss.map(f=>esc(MISS_LABEL[f]||f)).join(', ') : '⏳ Идёт расчёт…'}
-      </div>
-      <div class="oc-actions">
-        <button class="btn" onclick="editProject('${id}')">✏️ Редактировать</button>
-        <button class="btn-recalc" id="btn-recalc" onclick="recalculate('${id}')">🔄 Пересчитать</button>
-        <button class="btn" onclick="deleteProject('${id}')" style="margin-left:auto;color:#c0392b;border-color:#f5c6cb">🗑 Удалить</button>
-      </div>`;
-  }
-
-  // ── ЧАТ ──────────────────────────────────
-  const tgSvgS = '<svg width="14" height="14" viewBox="0 0 24 24" style="vertical-align:middle;flex-shrink:0"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.93 6.89l-1.68 7.92c-.12.56-.46.7-.93.43l-2.57-1.89-1.24 1.19c-.14.14-.25.25-.51.25l.18-2.62 4.74-4.28c.21-.18-.04-.28-.32-.1L8.18 14.3l-2.52-.79c-.55-.17-.56-.55.11-.81l9.85-3.8c.45-.17.85.11.71.79z" fill="#2AABEE"/></svg>';
-  const chatBubbles = msgs.length ? msgs.map(m=>{
-    const out = m.direction==='outgoing';
-    const fromTg = m.structured_data && m.structured_data.source==='telegram';
-    return `<div class="cw-bubble ${out?'out':'in'}">
-      <div class="cw-text">${esc(m.message_text||'')}</div>
-      <div class="cw-time">${fromTg?tgSvgS:''}<span>${fmtT(m.created_at)}</span></div>
-    </div>`;
-  }).join('') : '<div class="ichat-empty">Сообщений пока нет</div>';
-
-  // ── СБОРКА ──────────────────────────────
   const rightEl = document.getElementById('right');
   rightEl.style.cssText = 'overflow:hidden;padding:0;height:100%';
   rightEl.innerHTML = `<div class="detail-split">
     <div class="detail-left">
       <div class="oc">
-        <div class="oc-head">
-          <div class="oc-head-top">
-            <div class="oc-code">${esc(p.code||'—')}</div>
-            <span class="badge ${st.cls}" style="font-size:12px;padding:4px 12px;margin-top:2px">${st.label}</span>
-          </div>
-          <div class="oc-meta">
-            <span>👤 ${esc(p.manager_name||'—')}</span>
-            <span>📡 ${esc(p.source||'—')}</span>
-            <span>🕐 ${fmtD(p.created_at)}</span>
-          </div>
-          ${p.raw_request && p.raw_request!=='Confirmation'?`<div class="oc-raw">"${esc(p.raw_request.slice(0,140))}"</div>`:''}
-          <div class="oc-pipe" style="margin-top:14px">${buildPipe(p.status)}</div>
-        </div>
-        ${(p.client_name||p.client_email||p.client_phone)?`
-        <div class="oc-sec">
-          <div class="oc-sec-label">Клиент</div>
-          ${p.client_name?`<div class="oc-row"><span class="oc-row-k">Имя</span><span class="oc-row-v">${esc(p.client_name)}</span></div>`:''}
-          ${p.client_phone?`<div class="oc-row"><span class="oc-row-k">Телефон</span><span class="oc-row-v"><a href="tel:${esc(p.client_phone)}" style="color:#1e2f3d;text-decoration:none">${esc(p.client_phone)}</a></span></div>`:''}
-          ${p.client_email?`<div class="oc-row"><span class="oc-row-k">Email</span><span class="oc-row-v"><a href="mailto:${esc(p.client_email)}" style="color:#2155a0;text-decoration:none">${esc(p.client_email)}</a></span></div>`:''}
-        </div>`:''}
-        <div class="oc-sec">
-          <div class="oc-sec-label">Параметры ${totalP?`· ${paramRows.length}/${totalP}`:''}</div>
-          ${paramRows.length ? paramRows.map(([k,v])=>`<div class="oc-row"><span class="oc-row-k">${k}</span><span class="oc-row-v">${v}</span></div>`).join('') : '<div style="font-size:12px;color:#8c9daf">Пока ничего не распознано</div>'}
-          ${miss.length ? `<div class="oc-miss">${miss.map(f=>`<span class="oc-miss-tag">❓ ${esc(MISS_LABEL[f]||f)}</span>`).join('')}</div>` : (paramRows.length?'<div style="font-size:11px;color:#16a34a;margin-top:8px">✓ Все данные получены</div>':'')}
-          ${totalP ? `<div class="oc-progress"><div class="oc-progress-bar" style="width:${pct}%"></div></div>` : ''}
-        </div>
-        ${estimateSec}
-      </div>
-    </div>
-    <div class="detail-right">
-      <div class="ichat-hdr">
-        <div class="ichat-hdr-title">💬 Чат с клиентом</div>
-        <div class="ichat-hdr-sub">${esc(p.manager_name||'')}${p.manager_chat_id?' · TG '+p.manager_chat_id:''}</div>
-      </div>
-      <div class="ichat-msgs" id="ichat-msgs">${chatBubbles}</div>
-      <div class="ichat-bar">
-        <textarea id="chat-inp" placeholder="Написать клиенту…" rows="1"
-          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg('${id}')}"
-          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
-        <button class="ichat-send" id="send-btn" onclick="sendMsg('${id}')">&#8593;</button>
-      </div>
-    </div>
-  </div>`;
-  const cm = document.getElementById('ichat-msgs');
-  if(cm) cm.scrollTop = cm.scrollHeight;
-}
-
-// ═══ ВСПОМОГАТЕЛЬНЫЕ ═══════════════════════
+// buildPipe оставляем для совместимости с ЛК
 function buildPipe(status){
   const steps = ['draft','clarifying','calculated','sent'];
   const labels = {draft:'Черновик', clarifying:'Уточнение', calculated:'Рассчитано', sent:'Отправлено'};
@@ -1083,92 +1086,6 @@ function buildPipe(status){
     <div class="sp-step ${i<cur?'done':i===cur?'active':''}">${labels[s]}</div>
     ${i<steps.length-1?`<div class="sp-line ${i<cur?'done':''}"></div>`:''}`
   ).join('');
-}
-
-async function loadMsgs(id){
-  try { return await sbGet(`clarification_messages?project_id=eq.${id}&order=created_at.asc`); }
-  catch(e){ return projects.find(x=>String(x.id)===String(id))?._msgs || []; }
-}
-
-async function recalculate(id){
-  const btn = document.getElementById('btn-recalc');
-  if(btn){ btn.disabled=true; btn.textContent='⏳ Пересчёт…'; }
-
-  const p     = projects.find(x=>String(x.id)===String(id));
-  const item  = p?.project_items?.[0];
-  const attrs = item?.filled_attrs || {};
-
-  if(attrs.series && attrs.width_mm && attrs.material_code){
-    const code = `${attrs.series}-${attrs.width_mm}x${attrs.depth_mm||600}`;
-    try {
-      const res  = await rpc('get_price_by_code',{p_code:code, p_material:attrs.material_code});
-      const row  = Array.isArray(res) ? res[0] : res;
-      const unit = attrs.price_type==='wholesale' ? row?.price_wholesale : (row?.price_retail||row?.price_wholesale);
-      if(unit && item?.id){
-        const qty = attrs.quantity||1;
-        await sbPatch(`project_items?id=eq.${item.id}`,{unit_price:unit, total_price:unit*qty, status:'complete', missing_attrs:[]});
-        await sbPatch(`projects?id=eq.${id}`,{status:'calculated'});
-        await loadProjects();
-        renderRight(id);
-        return;
-      }
-    } catch(e){}
-  }
-
-  // Если RPC не сработал — сигналим боту
-  try {
-    await sbPost('clarification_messages',{project_id:parseInt(id),direction:'incoming',message_text:'[ПЕРЕСЧИТАТЬ]'});
-    await loadProjects();
-    renderRight(id);
-  } catch(e){}
-
-  if(btn){ btn.disabled=false; btn.innerHTML='🔄 Пересчитать'; }
-}
-
-async function sendMsg(id){
-  const inp  = document.getElementById('chat-inp');
-  const btn  = document.getElementById('send-btn');
-  const text = inp ? inp.value.trim() : '';
-  if(!text) return;
-  inp.disabled = btn.disabled = true;
-  inp.value = '';
-  const p = projects.find(x=>String(x.id)===String(id));
-  try {
-    await sbPost('clarification_messages',{
-      project_id: parseInt(id),
-      direction: 'outgoing',
-      message_text: text,
-      structured_data: {sender:'manager'}
-    });
-    if(p && p.manager_chat_id){
-      fetch('https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({chat_id: p.manager_chat_id, text: text})
-      }).catch(()=>{});
-    }
-    await loadProjects();
-    renderRight(id);
-    if(lkOrderId===id) lkRenderDetail(id);
-  } catch(e){ inp.value = text; }
-  inp.disabled = btn.disabled = false;
-  inp && inp.focus();
-}
-
-async function markSent(id){
-  try { await sbPatch(`projects?id=eq.${id}`,{status:'sent'}); await loadProjects(); renderRight(id); }
-  catch(e){ alert('(демо)'); }
-}
-
-async function deleteProject(id){
-  const p = projects.find(x=>String(x.id)===String(id));
-  const label = p ? (p.code||'заявку') : 'заявку';
-  if(!confirm(`Удалить ${label}?\n\nЭто действие необратимо.`)) return;
-  try {
-    await sbPatch(`projects?id=eq.${id}`, {is_active: false});
-    activeId = null;
-    document.getElementById('right').innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Выберите заявку</div></div>';
-    await loadProjects();
-  } catch(e){ alert('Ошибка удаления: '+e.message); }
 }
 
 // ═══ РЕДАКТИРОВАНИЕ СУЩЕСТВУЮЩЕЙ ЗАЯВКИ ═════
@@ -1230,7 +1147,7 @@ async function npSaveEdit(){
       status:'complete', missing_attrs:[]
     });
     await sbPatch(`projects?id=eq.${_npEditMode}`,{status:'calculated'});
-    closeNP(); await loadProjects(); renderRight(_npEditMode);
+    closeNP(); await loadProjects(dealSearchQ); renderRight(_npEditMode);
   }catch(e){ npErr('Ошибка: '+e.message); btn.disabled=false; btn.textContent='Сохранить изменения'; }
 }
 
@@ -1842,7 +1759,7 @@ async function npSave(){
       p_client_email:$v('np-client-email').value.trim()||null,
       p_client_phone:$v('np-client-phone').value.trim()||null,
     });
-    closeNP(); await loadProjects();
+    closeNP(); await loadProjects(dealSearchQ);
   }catch(e){
     npErr('Ошибка сохранения: '+e.message);
     btn.disabled=false; btn.textContent='Создать заявку';
