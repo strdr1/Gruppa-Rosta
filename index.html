@@ -393,6 +393,10 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
         </div>
         <div class="filters">
           <div class="f-pill on" onclick="setFilter('C2:NEW',this)">Новые</div>
+          <div class="f-pill" onclick="setFilter('C2:2',this)">Клиент</div>
+          <div class="f-pill" onclick="setFilter('C2:6',this)">Менеджер</div>
+          <div class="f-pill" onclick="setFilter('C2:EXECUTING',this)">В работе</div>
+          <div class="f-pill" onclick="setFilter('ALL',this)">Все</div>
         </div>
         <button class="np-btn" onclick="openNP()">+ Новая заявка</button>
       </div>
@@ -901,7 +905,10 @@ async function loadProjects(q){
   const el = document.getElementById('plist');
   el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;color:#8c9daf;font-size:13px;padding:16px 6px"><div class="spinner"></div> Загрузка…</div>';
   try {
-    const url = N8N_BASE + '/deals' + (q ? '?q='+encodeURIComponent(q) : '');
+    const params = new URLSearchParams();
+    if(q) params.set('q', q);
+    const qs = params.toString();
+    const url = N8N_BASE + '/deals' + (qs ? '?'+qs : '');
     const r = await fetch(url);
     const data = await r.json();
     projects = data.deals || [];
@@ -927,7 +934,7 @@ function setFilter(f, el){
 }
 
 function renderList(){
-  const list = projects;
+  const list = listFilter === 'ALL' ? projects : projects.filter(p => p.stage_id === listFilter);
   const el = document.getElementById('plist');
 
   if(!list.length){
@@ -1669,7 +1676,7 @@ async function npLoadMatrix(vid, mid, scale){
   try{
     npAccData=[]; npSelAcc=new Set();
     const rows=await sbGet(
-      'accessory_variants?variant_id=eq.'+vid+'&select=accessories(id,name,price_retail,price_wholesale)&limit=60'
+      'accessory_variants?variant_id=eq.'+vid+'&select=accessories(id,name,price_retail,price_wholesale,group_name)&limit=60'
     );
     const seen=new Set();
     npAccData=rows
@@ -1716,13 +1723,23 @@ function npMxRecalc(){
 
 function npAccRender(){
   const pf=npPT==='wholesale'?'price_wholesale':'price_retail';
-  $v('np-acc-list').innerHTML=npAccData.map(function(a){
-    return '<div class="mx-acc-item'+(npSelAcc.has(a.id)?' on':'')+'" onclick="npAccToggle('+a.id+')">'
+  // Группируем по group_name
+  const groups=new Map();
+  npAccData.forEach(a=>{
+    const g=a.group_name||'Комплектующие';
+    if(!groups.has(g)) groups.set(g,[]);
+    groups.get(g).push(a);
+  });
+  let html='';
+  groups.forEach((items,group)=>{
+    html+='<div style="font-size:11px;color:#617e98;font-weight:600;margin:8px 0 4px;text-transform:uppercase;letter-spacing:.4px">'+esc(group)+'</div>';
+    html+=items.map(a=>'<div class="mx-acc-item'+(npSelAcc.has(a.id)?' on':'')+'" onclick="npAccToggle('+a.id+')">'
       +'<div class="mx-acc-cb">'+(npSelAcc.has(a.id)?'✓':'')+'</div>'
       +'<div class="mx-acc-name" title="'+esc(a.name)+'">'+esc(a.name)+'</div>'
       +'<div class="mx-acc-price">+'+fmt(a[pf]||a.price_retail)+' ₽</div>'
-      +'</div>';
-  }).join('');
+      +'</div>').join('');
+  });
+  $v('np-acc-list').innerHTML=html;
   const accTot=npAccData.filter(a=>npSelAcc.has(a.id)).reduce((s,a)=>s+(a[pf]||a.price_retail||0),0);
   $v('np-acc-total').textContent=accTot?'Допы: +'+fmt(accTot)+' ₽':'';
   // Обновляем главную цену с учётом допов
