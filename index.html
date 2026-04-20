@@ -519,8 +519,8 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
       </div>
       <div class="nf-row2">
         <div class="nf-group">
-          <div class="nf-label">Телефон</div>
-          <input type="tel" id="np-client-phone" class="nf-inp" placeholder="+7 900 000-00-00">
+          <div class="nf-label">Телефон <span id="np-phone-hint" style="font-size:11px;color:#617e98;font-weight:400"></span></div>
+          <input type="tel" id="np-client-phone" class="nf-inp" placeholder="+7 900 000-00-00" oninput="npPhoneLookup(this.value)">
         </div>
         <div class="nf-group">
           <div class="nf-label">Email</div>
@@ -1042,7 +1042,41 @@ function openNPforDeal(dealId){
     if(mgrEl && deal.manager_name) mgrEl.value=deal.manager_name;
     if(deal.client_name){ const el=$v('np-client-name'); if(el) el.value=deal.client_name; }
     if(deal.client_phone){ const el=$v('np-client-phone'); if(el) el.value=deal.client_phone; }
+    if(deal.client_email){ const el=$v('np-client-email'); if(el) el.value=deal.client_email; }
   }
+}
+
+// Поиск клиента по телефону в Битрикс24
+let _phoneLookupTimer = null;
+async function npPhoneLookup(raw){
+  const hint = $v('np-phone-hint');
+  const digits = raw.replace(/\D/g,'');
+  if(digits.length < 10){ if(hint) hint.textContent=''; return; }
+  clearTimeout(_phoneLookupTimer);
+  _phoneLookupTimer = setTimeout(async()=>{
+    if(hint) hint.textContent = '🔍 поиск…';
+    try {
+      const B24 = 'https://cz-mebel.bitrix24.ru/rest/1830/w2wxftu6fa0yecy7/';
+      // Ищем дубликат по телефону
+      const dupRes = await fetch(B24+'crm.duplicate.findbycomm.json?type=PHONE&values[]='+encodeURIComponent(raw));
+      const dupData = await dupRes.json();
+      const contactIds = dupData.result?.CONTACT || [];
+      if(!contactIds.length){
+        if(hint) hint.textContent = '— не найден';
+        return;
+      }
+      // Берём первый найденный контакт
+      const cRes = await fetch(B24+'crm.contact.get.json?id='+contactIds[0]);
+      const cData = await cRes.json();
+      const c = cData.result;
+      if(!c){ if(hint) hint.textContent=''; return; }
+      const name = [c.NAME, c.LAST_NAME].filter(Boolean).join(' ');
+      const email = (c.EMAIL||[])[0]?.VALUE || null;
+      if(name){ const el=$v('np-client-name'); if(el&&!el.value) el.value=name; }
+      if(email){ const el=$v('np-client-email'); if(el&&!el.value) el.value=email; }
+      if(hint) hint.textContent = '✓ '+name;
+    } catch(e){ if(hint) hint.textContent=''; }
+  }, 600);
 }
 
 // заглушка чтобы старые функции не падали
