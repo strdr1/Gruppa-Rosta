@@ -393,10 +393,6 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
         </div>
         <div class="filters">
           <div class="f-pill on" onclick="setFilter('C2:NEW',this)">Новые</div>
-          <div class="f-pill" onclick="setFilter('C2:2',this)">Клиент</div>
-          <div class="f-pill" onclick="setFilter('C2:6',this)">Менеджер</div>
-          <div class="f-pill" onclick="setFilter('C2:EXECUTING',this)">В работе</div>
-          <div class="f-pill" onclick="setFilter('ALL',this)">Все</div>
         </div>
         <button class="np-btn" onclick="openNP()">+ Новая заявка</button>
       </div>
@@ -934,7 +930,7 @@ function setFilter(f, el){
 }
 
 function renderList(){
-  const list = listFilter === 'ALL' ? projects : projects.filter(p => p.stage_id === listFilter);
+  const list = projects;
   const el = document.getElementById('plist');
 
   if(!list.length){
