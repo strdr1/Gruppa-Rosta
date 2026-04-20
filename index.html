@@ -1033,10 +1033,12 @@ async function loadDealProducts(dealId){
 }
 
 function openNPforDeal(dealId){
-  // Открываем форму новой заявки — при сохранении прикрепим к этой сделке
   window._attachToDeal = dealId;
   openNP();
   document.querySelector('.np-hdr h3').textContent = '➕ Добавить товар в сделку #'+dealId;
+  // Подставляем менеджера из этой конкретной сделки
+  const deal = projects.find(x=>String(x.id)===String(dealId));
+  if(deal?.manager_name){ const mgrEl=$v('np-manager'); if(mgrEl) mgrEl.value=deal.manager_name; }
 }
 
 // заглушка чтобы старые функции не падали
@@ -1214,8 +1216,12 @@ function npNearest(arr,v){ return arr.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?
 
 async function openNP(){
   ['np-width','np-depth','np-client-name','np-client-phone',
-   'np-client-email','np-manager','np-notes']
+   'np-client-email','np-notes']
     .forEach(id=>{ const e=$v(id); if(e) e.value=''; });
+  // Авто-заполняем менеджера: из активной сделки > из localStorage
+  const activeDeal = activeId ? projects.find(x=>String(x.id)===String(activeId)) : null;
+  const savedMgr = (activeDeal?.manager_name) || localStorage.getItem('mgr_name') || '';
+  const mgrEl=$v('np-manager'); if(mgrEl) mgrEl.value=savedMgr;
   $v('np-qty').value='1';
   clearTimeout(_npDeb); _npDeb=null; _npSwActiveId=null;
   npPT='retail'; npRes=null; npBomRows=[]; npAccData=[]; npSelAcc=new Set(); npVariants=[];
@@ -1705,45 +1711,71 @@ async function npSave(){
   const pf=npPT==='wholesale'?'price_wholesale':'price_retail';
   const selAcc=npAccData.filter(a=>npSelAcc.has(a.id));
   const accTot=selAcc.reduce((s,a)=>s+(a[pf]||a.price_retail||0),0);
-  const labor=parseInt($v('mx-labor')?.value)||0;
-  const matCost=npBomRows.reduce((s,r)=>s+Math.round(r.qty*r.price),0);
+  const managerName=$v('np-manager').value.trim()||localStorage.getItem('mgr_name')||'Менеджер';
+  // Сохраняем имя менеджера для следующего раза
+  if(managerName&&managerName!=='Менеджер') localStorage.setItem('mgr_name', managerName);
+
   const attrs={series:variant?.series||'',width_mm:w,material_code:mat,quantity:qty,price_type:npPT};
   if(d)   attrs.depth_mm=d;
   if(vib) attrs.vibration_class=vib;
-  if(labor)   attrs.labor_cost=labor;
-  if(matCost) attrs.materials_cost=matCost;
-  if(npRes.stock_qty!=null) attrs.stock_qty=npRes.stock_qty;
-  if(npBomRows.length) attrs.bom=npBomRows.map(r=>({name:r.name,unit:r.unit,qty:r.qty,price:r.price}));
   if(selAcc.length) attrs.accessories=selAcc.map(a=>({id:a.id,name:a.name,price:a[pf]||a.price_retail}));
-  const raw=[
-    npRes.variant_name||variant?.series||'',
-    d?(w+'×'+d+' мм'):(w+' мм'),
-    MAT_NAME[mat]||mat,
-    qty>1?(qty+' шт.'):'',
-    selAcc.map(a=>a.name).join(', '),
-    $v('np-notes').value.trim()
-  ].filter(Boolean).join(', ');
+
+  // Код варианта для Битрикс (variant_code)
+  let variant_code=null;
+  if(variant?.series&&w){
+    if(d&&vib) variant_code=variant.series+'-'+w+'x'+d+'-'+vib;
+    else if(d)  variant_code=variant.series+'-'+w+'x'+d;
+    else        variant_code=variant.series+'-'+w;
+  }
+
+  // Название товара
+  const variant_name=npRes.variant_name||variant?.series||'';
+  const total_price=(npRes._unit+accTot)*qty;
+  const code='М-'+Date.now().toString(36).toUpperCase().slice(-6);
+
+  const payload={
+    code,
+    created_at: new Date().toISOString(),
+    variant_name,
+    variant_code,
+    material_code: mat||null,
+    unit_price: npRes._unit+accTot,
+    total_price,
+    qty,
+    attrs,
+    client_name:  $v('np-client-name').value.trim()||null,
+    client_phone: $v('np-client-phone').value.trim()||null,
+    client_email: $v('np-client-email').value.trim()||null,
+    manager_name: managerName,
+    notes:        $v('np-notes').value.trim()||null,
+    price_type:   npPT,
+  };
+  // Если открыто из кнопки "Добавить товар в сделку" — прикрепляем к существующей
+  if(window._attachToDeal) payload.attach_to_deal = window._attachToDeal;
+
   const btn=$v('np-save-btn');
-  btn.disabled=true; btn.textContent='Сохранение...';
+  btn.disabled=true; btn.textContent='Создание сделки…';
   try{
-    await rpc('save_project',{
-      p_manager_chat_id:'0',
-      p_manager_name:$v('np-manager').value.trim()||'Менеджер',
-      p_source:'manual',
-      p_raw_request:raw,
-      p_variant_id:npRes.variant_id,
-      p_material_id:npRes.material_id,
-      p_quantity:qty,
-      p_price_type:npPT,
-      p_unit_price:npRes._unit+accTot,
-      p_filled_attrs:attrs,
-      p_client_name:$v('np-client-name').value.trim()||null,
-      p_client_email:$v('np-client-email').value.trim()||null,
-      p_client_phone:$v('np-client-phone').value.trim()||null,
+    const r=await fetch(N8N_BASE+'/kp-from-site',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
     });
-    closeNP(); await loadProjects(dealSearchQ);
+    const res=await r.json();
+    if(res.ok){
+      window._attachToDeal=null;
+      closeNP();
+      await loadProjects(dealSearchQ);
+      // Показываем уведомление с ссылкой на сделку
+      if(res.deal_id){
+        const url='https://cz-mebel.bitrix24.ru/crm/deal/details/'+res.deal_id+'/';
+        if(confirm('✅ Сделка #'+res.deal_id+' создана в Битрикс24!\nОткрыть сделку?')) window.open(url,'_blank');
+      }
+    } else {
+      throw new Error(JSON.stringify(res));
+    }
   }catch(e){
-    npErr('Ошибка сохранения: '+e.message);
+    npErr('Ошибка: '+e.message);
     btn.disabled=false; btn.textContent='Создать заявку';
   }
 }
