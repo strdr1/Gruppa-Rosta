@@ -530,7 +530,7 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
       <hr class="nf-sep">
       <div class="nf-group">
         <div class="nf-label">Менеджер</div>
-        <input type="text" id="np-manager" class="nf-inp" placeholder="Имя менеджера">
+        <select id="np-manager" class="nf-inp" style="background:#fff"></select>
       </div>
       <div class="nf-group">
         <div class="nf-label">Примечание</div>
@@ -1036,9 +1036,13 @@ function openNPforDeal(dealId){
   window._attachToDeal = dealId;
   openNP();
   document.querySelector('.np-hdr h3').textContent = '➕ Добавить товар в сделку #'+dealId;
-  // Подставляем менеджера из этой конкретной сделки
   const deal = projects.find(x=>String(x.id)===String(dealId));
-  if(deal?.manager_name){ const mgrEl=$v('np-manager'); if(mgrEl) mgrEl.value=deal.manager_name; }
+  if(deal){
+    const mgrEl=$v('np-manager');
+    if(mgrEl && deal.manager_name) mgrEl.value=deal.manager_name;
+    if(deal.client_name){ const el=$v('np-client-name'); if(el) el.value=deal.client_name; }
+    if(deal.client_phone){ const el=$v('np-client-phone'); if(el) el.value=deal.client_phone; }
+  }
 }
 
 // заглушка чтобы старые функции не падали
@@ -1218,10 +1222,16 @@ async function openNP(){
   ['np-width','np-depth','np-client-name','np-client-phone',
    'np-client-email','np-notes']
     .forEach(id=>{ const e=$v(id); if(e) e.value=''; });
-  // Авто-заполняем менеджера: из активной сделки > из localStorage
-  const activeDeal = activeId ? projects.find(x=>String(x.id)===String(activeId)) : null;
-  const savedMgr = (activeDeal?.manager_name) || localStorage.getItem('mgr_name') || '';
-  const mgrEl=$v('np-manager'); if(mgrEl) mgrEl.value=savedMgr;
+  // Заполняем дропдаун менеджеров из загруженных сделок
+  const mgrEl=$v('np-manager');
+  if(mgrEl){
+    const names = [...new Set(projects.map(p=>p.manager_name).filter(Boolean))].sort();
+    const savedMgr = (activeId ? projects.find(x=>String(x.id)===String(activeId)) : null)?.manager_name
+      || localStorage.getItem('mgr_name') || '';
+    mgrEl.innerHTML = '<option value="">— менеджер —</option>'
+      + names.map(n=>`<option value="${esc(n)}"${n===savedMgr?' selected':''}>${esc(n)}</option>`).join('');
+    if(!names.includes(savedMgr) && savedMgr) mgrEl.innerHTML += `<option value="${esc(savedMgr)}" selected>${esc(savedMgr)}</option>`;
+  }
   $v('np-qty').value='1';
   clearTimeout(_npDeb); _npDeb=null; _npSwActiveId=null;
   npPT='retail'; npRes=null; npBomRows=[]; npAccData=[]; npSelAcc=new Set(); npVariants=[];
