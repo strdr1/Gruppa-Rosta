@@ -533,6 +533,10 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
         <select id="np-manager" class="nf-inp" style="background:#fff"></select>
       </div>
       <div class="nf-group">
+        <div class="nf-label">Название сделки <span style="font-size:11px;color:#617e98;font-weight:400">(если не задано — автоматически)</span></div>
+        <input type="text" id="np-deal-title" class="nf-inp" placeholder="Например: Лаборатория МГТУ 2026">
+      </div>
+      <div class="nf-group">
         <div class="nf-label">Примечание</div>
         <textarea id="np-notes" class="nf-inp" rows="2" style="resize:none" placeholder="Дополнительно..."></textarea>
       </div>
@@ -1257,7 +1261,7 @@ function npNearest(arr,v){ return arr.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?
 
 async function openNP(){
   ['np-width','np-depth','np-client-name','np-client-phone',
-   'np-client-email','np-notes']
+   'np-client-email','np-deal-title','np-notes']
     .forEach(id=>{ const e=$v(id); if(e) e.value=''; });
   // Заполняем дропдаун менеджеров из загруженных сделок
   const mgrEl=$v('np-manager');
@@ -1804,6 +1808,7 @@ async function npSave(){
     client_phone: $v('np-client-phone').value.trim()||null,
     client_email: $v('np-client-email').value.trim()||null,
     manager_name: managerName,
+    deal_title:   $v('np-deal-title').value.trim()||null,
     notes:        $v('np-notes').value.trim()||null,
     price_type:   npPT,
   };
