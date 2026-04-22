@@ -1096,7 +1096,7 @@ async function loadDealKP(dealId){
     }
     const pdfUrl = 'https://cz-mebel.bitrix24.ru' + kp.downloadUrl;
     sec.innerHTML = '<div class="oc-sec-label">КП</div>'
-      + `<a href="${pdfUrl}" target="_blank" class="btn primary" style="text-decoration:none;margin-top:8px;display:inline-block">📄 Открыть КП</a>`;
+      + `<a href="${pdfUrl}" target="_blank" rel="noopener" class="btn primary" style="text-decoration:none;margin-top:8px;display:inline-block">📄 Открыть КП</a>`;
   } catch(e){
     if(sec) sec.innerHTML = '<div class="oc-sec-label">КП</div><div style="color:#c0392b;font-size:12px">Ошибка загрузки</div>';
   }
