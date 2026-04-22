@@ -1949,9 +1949,25 @@ async function npSave(){
     return {characteristics: '', image_url: ''};
   }
 
+  async function fetchImageAsBase64(url) {
+    if (!url) return '';
+    try {
+      const r = await fetch(url);
+      if (!r.ok) return '';
+      const blob = await r.blob();
+      return await new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = () => resolve('');
+        fr.readAsDataURL(blob);
+      });
+    } catch(e) { return ''; }
+  }
+
   btn.textContent='Загрузка данных…';
   const enrichedItems = await Promise.all(items.map(async p => {
     const vd = await fetchVariantData(p.variant_code, p.attrs);
+    const img_b64 = await fetchImageAsBase64(vd.image_url || '');
     return {
       variant_code:    p.variant_code,
       material_code:   p.material_code,
@@ -1962,7 +1978,7 @@ async function npSave(){
       attrs:           p.attrs,
       characteristics: vd.characteristics || '',
       image_url:       vd.image_url || '',
-      image_b64:       ''
+      image_b64:       img_b64
     };
   }));
 
