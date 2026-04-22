@@ -597,7 +597,7 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
       <button class="btn" onclick="closeNP()">Отмена</button>
       <button class="btn" id="np-calc-btn" onclick="npCalc(true)" style="flex:1">Обновить расчёт</button>
       <button class="btn" id="np-add-btn" onclick="npAddToCart()" style="flex:1" disabled>+ В корзину</button>
-      <button class="btn" id="np-kp-btn" onclick="npSave()" style="flex:1" disabled>Сформировать КП</button>
+      <button class="btn" id="np-kp-btn" onclick="npSaveKP()" style="flex:1" disabled>Сформировать КП</button>
       <button class="btn primary" id="np-save-btn" onclick="npSave()" style="flex:1" disabled>Создать заявку</button>
     </div>
   </div>
@@ -1833,6 +1833,32 @@ function npRenderCart(){
 function npCartRemove(i){
   npCart.splice(i,1);
   npRenderCart();
+}
+
+async function npSaveKP(){
+  if(!npRes && !npCart.length) return;
+  const btn=$v('np-kp-btn');
+  btn.disabled=true; btn.textContent='Формирование КП…';
+  const items = npCart.length > 0 ? [...npCart] : [npBuildPayload()];
+  let dealId=null;
+  try{
+    for(let i=0;i<items.length;i++){
+      const payload={...items[i], kp_only:true};
+      if(dealId) payload.attach_to_deal=dealId;
+      btn.textContent=`КП ${i+1}/${items.length}…`;
+      const r=await fetch(N8N_BASE+'/kp-from-site',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const res=await r.json();
+      if(!res.ok) throw new Error(JSON.stringify(res));
+      if(!dealId && res.deal_id) dealId=res.deal_id;
+      if(i===items.length-1 && res.pdf_url){
+        window.open(res.pdf_url,'_blank');
+      }
+    }
+    btn.disabled=false; btn.textContent='Сформировать КП';
+  }catch(e){
+    npErr('Ошибка: '+e.message);
+    btn.disabled=false; btn.textContent='Сформировать КП';
+  }
 }
 
 async function npSave(){
