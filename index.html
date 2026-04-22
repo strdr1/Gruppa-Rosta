@@ -350,7 +350,12 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
       <button class="hdr-tab active" onclick="switchView('manager',this)">📋 Менеджер</button>
       <button class="hdr-tab" onclick="switchView('lk',this)">🏠 ЛК Клиента</button>
     </div>
-    <button class="hdr-refresh" onclick="loadProjects()">⟳ Обновить</button>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="b24-auth-badge" style="display:none;font-size:11px;color:#617e98;padding:5px 12px;border-radius:16px;background:#eef5ff;border:1px solid #cfe0f5">
+        <span style="color:#2563eb;font-weight:600">Б24</span> <span id="b24-auth-user">—</span>
+      </div>
+      <button class="hdr-refresh" onclick="loadProjects()">⟳ Обновить</button>
+    </div>
   </div>
 
   
@@ -643,7 +648,55 @@ const B24_STAGE = {
 
 const TG_TOKEN = '8090054234:AAHnoNv7Vt3LrK7pbPXPMB5Xcmvxgc3WIBc';
 const N8N_BASE = 'https://n8n-grupparosta.chickenkiller.com/webhook';
-let projects  = [];   
+
+// ── Bitrix24 iframe авторизация ──────────────────────────────────────
+let B24_AUTH = null;
+async function loadB24UserInfo() {
+  if (!B24_AUTH || !B24_AUTH.domain || !B24_AUTH.auth_id) return;
+  try {
+    const url = `https://${B24_AUTH.domain}/rest/user.current?auth=${encodeURIComponent(B24_AUTH.auth_id)}`;
+    const r = await fetch(url);
+    const data = await r.json();
+    if (data && data.result) {
+      const u = data.result;
+      B24_AUTH.user_name = `${u.NAME || ''} ${u.LAST_NAME || ''}`.trim() || u.EMAIL || 'Менеджер';
+      B24_AUTH.user_id = u.ID;
+      B24_AUTH.user_email = u.EMAIL;
+      sessionStorage.setItem('b24_auth', JSON.stringify(B24_AUTH));
+      const badge = document.getElementById('b24-auth-badge');
+      const userEl = document.getElementById('b24-auth-user');
+      if (badge && userEl) {
+        userEl.textContent = B24_AUTH.user_name;
+        badge.style.display = 'inline-flex';
+      }
+    }
+  } catch(e) { console.warn('[B24] user info error:', e); }
+}
+
+(function initB24Auth(){
+  // Bitrix24 передаёт параметры через POST к iframe. При GET страница открыта
+  // вне Bitrix — сессия восстанавливается из sessionStorage (если есть).
+  const qs = new URLSearchParams(window.location.search);
+  const authId = qs.get('AUTH_ID') || qs.get('auth_id');
+  const domain = qs.get('DOMAIN') || qs.get('domain');
+  const memberId = qs.get('member_id') || qs.get('MEMBER_ID');
+  const userId = qs.get('USER_ID') || qs.get('user_id');
+  if (authId && domain) {
+    B24_AUTH = {auth_id: authId, domain, member_id: memberId, user_id: userId, ts: Date.now()};
+    sessionStorage.setItem('b24_auth', JSON.stringify(B24_AUTH));
+  } else {
+    const saved = sessionStorage.getItem('b24_auth');
+    if (saved) { try { B24_AUTH = JSON.parse(saved); } catch(e){} }
+  }
+  window._b24Auth = B24_AUTH;
+  if (B24_AUTH) {
+    console.log('[B24] авторизован:', B24_AUTH);
+    // Отложенно подгружаем имя пользователя
+    setTimeout(loadB24UserInfo, 100);
+  }
+})();
+
+let projects  = [];
 let activeId  = null;
 let listFilter= 'C2:NEW';
 let pollTimer = null;
@@ -1034,21 +1087,16 @@ async function loadDealKP(dealId){
   const sec = document.getElementById('deal-kp-'+dealId);
   if(!sec) return;
   try {
-    const r = await fetch('https://cz-mebel.bitrix24.ru/rest/1830/w2wxftu6fa0yecy7/crm.timeline.comment.list?filter[ENTITY_TYPE]=deal&filter[ENTITY_ID]='+dealId);
+    const r = await fetch('https://cz-mebel.bitrix24.ru/rest/1830/w2wxftu6fa0yecy7/crm.deal.get?id='+dealId);
     const data = await r.json();
-    const comments = data.result || [];
-    let pdfUrl = null;
-    for(const c of comments){
-      const text = c.COMMENT || c.content || '';
-      const m = text.match(/https:\/\/storage\.googleapis\.com\/[^\s"<]+/);
-      if(m){ pdfUrl = m[0]; break; }
-    }
-    if(!pdfUrl){
+    const kp = data.result && data.result.UF_CRM_1657279819764;
+    if(!kp || !kp.downloadUrl){
       sec.innerHTML = '<div class="oc-sec-label">КП</div><div style="color:#8c9daf;font-size:12px">КП не сформировано</div>';
       return;
     }
+    const pdfUrl = 'https://cz-mebel.bitrix24.ru' + kp.downloadUrl;
     sec.innerHTML = '<div class="oc-sec-label">КП</div>'
-      + `<button class="btn primary" style="margin-top:8px" onclick="openKPModal('${pdfUrl}')">Просмотр КП</button>`;
+      + `<a href="${pdfUrl}" target="_blank" class="btn primary" style="text-decoration:none;margin-top:8px;display:inline-block">📄 Открыть КП</a>`;
   } catch(e){
     if(sec) sec.innerHTML = '<div class="oc-sec-label">КП</div><div style="color:#c0392b;font-size:12px">Ошибка загрузки</div>';
   }
