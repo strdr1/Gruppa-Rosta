@@ -1870,27 +1870,83 @@ async function npSave(){
   btn.disabled=true; btn.textContent='Создание сделки…';
 
   const items = npCart.length > 0 ? [...npCart] : [npBuildPayload()];
-  let dealId=null, lastRes=null;
+
+  // Подтягиваем характеристики и фото из Supabase для каждого товара
+  const SB_URL = 'https://uzijscrcqmtpkvyiewok.supabase.co/rest/v1';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6aWpzY3JjcW10cGt2eWlld29rIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI2NDUxNiwiZXhwIjoyMDg5ODQwNTE2fQ.53FP7qfAO4q5r22i5SKORqWCw6fSOqXW_vZGXxmYoMA';
+  const sbHeaders = {'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY};
+
+  async function fetchVariantData(variant_code, attrs) {
+    try {
+      const series = attrs && attrs.series ? attrs.series : '';
+      let url = SB_URL + '/product_variants?select=characteristics,image_url&limit=1';
+      if (variant_code) url += '&code=eq.' + encodeURIComponent(variant_code);
+      else if (series) url += '&series=eq.' + encodeURIComponent(series) + '&characteristics=not.is.null';
+      else return {characteristics: '', image_url: ''};
+      const r = await fetch(url, {headers: sbHeaders});
+      const rows = await r.json();
+      return rows && rows[0] ? rows[0] : {characteristics: '', image_url: ''};
+    } catch(e) { return {characteristics: '', image_url: ''}; }
+  }
+
+  async function fetchImageBase64(image_url) {
+    if (!image_url) return '';
+    try {
+      const r = await fetch(image_url);
+      const blob = await r.blob();
+      return await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    } catch(e) { return ''; }
+  }
+
+  btn.textContent='Загрузка данных…';
+  const enrichedItems = await Promise.all(items.map(async p => {
+    const vd = await fetchVariantData(p.variant_code, p.attrs);
+    const imgB64 = await fetchImageBase64(vd.image_url);
+    return {
+      variant_code:    p.variant_code,
+      material_code:   p.material_code,
+      variant_name:    p.variant_name,
+      qty:             p.qty,
+      unit_price:      p.unit_price,
+      total_price:     p.total_price,
+      attrs:           p.attrs,
+      characteristics: vd.characteristics || '',
+      image_b64:       imgB64 || ''
+    };
+  }));
+
+  // Берём общие поля из первого товара
+  const first = items[0];
+  const payload = {
+    client_name:    first.client_name,
+    client_phone:   first.client_phone,
+    client_email:   first.client_email,
+    manager_name:   first.manager_name,
+    manager_id:     first.manager_id,
+    deal_title:     first.deal_title,
+    notes:          first.notes,
+    stage_id:       first.stage_id,
+    price_type:     first.price_type,
+    attach_to_deal: window._attachToDeal || first.attach_to_deal || null,
+    items:          enrichedItems
+  };
 
   try{
-    for(let i=0;i<items.length;i++){
-      const payload=items[i];
-      if(dealId) payload.attach_to_deal=dealId;
-      else if(window._attachToDeal) payload.attach_to_deal=window._attachToDeal;
-      btn.textContent=`Отправка ${i+1}/${items.length}…`;
-      const r=await fetch(N8N_BASE+'/kp-from-site',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      const res=await r.json();
-      if(!res.ok) throw new Error(JSON.stringify(res));
-      if(!dealId) dealId=res.deal_id;
-      lastRes=res;
-    }
+    btn.textContent='Отправка…';
+    const r=await fetch(N8N_BASE+'/kp-from-site',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const res=await r.json();
+    if(!res.ok) throw new Error(JSON.stringify(res));
     npCart=[];
     window._attachToDeal=null;
     closeNP();
     await loadProjects(dealSearchQ);
-    if(dealId){
-      const url='https://cz-mebel.bitrix24.ru/crm/deal/details/'+dealId+'/';
-      if(confirm('✅ Сделка #'+dealId+' создана в Битрикс24!\nОткрыть сделку?')) window.open(url,'_blank');
+    if(res.deal_id){
+      const url='https://cz-mebel.bitrix24.ru/crm/deal/details/'+res.deal_id+'/';
+      if(confirm('✅ Сделка #'+res.deal_id+' создана в Битрикс24!\nОткрыть сделку?')) window.open(url,'_blank');
     }
   }catch(e){
     npErr('Ошибка: '+e.message);
