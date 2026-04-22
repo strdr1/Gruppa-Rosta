@@ -1806,11 +1806,13 @@ function npAddToCart(){
   npCart.push(payload);
   npRenderCart();
   npReset();
-  $v('np-type').value='';
+  $v('np-series').value='';
+  $v('np-series-search').value='';
   $v('np-width').value='';
-  $v('np-depth').value='';
-  $v('np-mat').value='';
+  const depthEl=$v('np-depth'); if(depthEl) depthEl.value='';
+  const matEl=$v('np-mat'); if(matEl) matEl.value='';
   $v('np-qty').value='1';
+  _npSwActiveId=null;
   npVariants=[];
 }
 
