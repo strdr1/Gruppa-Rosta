@@ -1925,16 +1925,28 @@ async function npSave(){
   const sbHeaders = {'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY};
 
   async function fetchVariantData(variant_code, attrs) {
-    try {
-      const series = attrs && attrs.series ? attrs.series : '';
-      let url = SB_URL + '/product_variants?select=characteristics,image_url&limit=1';
-      if (variant_code) url += '&code=eq.' + encodeURIComponent(variant_code);
-      else if (series) url += '&series=eq.' + encodeURIComponent(series) + '&characteristics=not.is.null';
-      else return {characteristics: '', image_url: ''};
-      const r = await fetch(url, {headers: sbHeaders});
-      const rows = await r.json();
-      return rows && rows[0] ? rows[0] : {characteristics: '', image_url: ''};
-    } catch(e) { return {characteristics: '', image_url: ''}; }
+    const series = attrs && attrs.series ? attrs.series : '';
+    const w = attrs && attrs.width_mm ? attrs.width_mm : null;
+    const d = attrs && attrs.depth_mm ? attrs.depth_mm : null;
+    const tryUrls = [];
+    // 1. Exact code
+    if (variant_code) tryUrls.push(SB_URL + '/product_variants?select=characteristics,image_url,name,code&code=eq.' + encodeURIComponent(variant_code) + '&limit=1');
+    // 2. By series + width + depth
+    if (series && w && d) tryUrls.push(SB_URL + '/product_variants?select=characteristics,image_url,name,code&series=eq.' + encodeURIComponent(series) + '&width_mm=eq.' + w + '&depth_mm=eq.' + d + '&limit=1');
+    // 3. By series + width
+    if (series && w) tryUrls.push(SB_URL + '/product_variants?select=characteristics,image_url,name,code&series=eq.' + encodeURIComponent(series) + '&width_mm=eq.' + w + '&characteristics=not.is.null&limit=1');
+    // 4. Series fallback (any with chars)
+    if (series) tryUrls.push(SB_URL + '/product_variants?select=characteristics,image_url,name,code&series=eq.' + encodeURIComponent(series) + '&characteristics=not.is.null&limit=1');
+    for (const url of tryUrls) {
+      try {
+        const r = await fetch(url, {headers: sbHeaders});
+        const rows = await r.json();
+        if (rows && rows[0] && (rows[0].characteristics || rows[0].image_url)) {
+          return rows[0];
+        }
+      } catch(e) {}
+    }
+    return {characteristics: '', image_url: ''};
   }
 
   btn.textContent='Загрузка данных…';
