@@ -1804,8 +1804,8 @@ function npAddToCart(){
   if(!npRes) return;
   const payload=npBuildPayload();
   npCart.push(payload);
-  npRenderCart();
   npReset();
+  npRenderCart();
   $v('np-series').value='';
   $v('np-series-search').value='';
   $v('np-width').value='';
