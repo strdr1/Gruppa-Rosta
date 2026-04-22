@@ -510,6 +510,25 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
         <input type="text" id="np-deal-title" class="nf-inp" placeholder="Например: Лаборатория МГТУ 2026">
       </div>
       <div class="nf-group">
+        <div class="nf-label">Стадия сделки <span style="font-size:11px;color:#617e98;font-weight:400">(необязательно)</span></div>
+        <select id="np-stage" class="nf-inp">
+          <option value="">— не менять —</option>
+          <option value="C2:NEW">Новая</option>
+          <option value="C2:UC_842H0G">Клиент из рассылок</option>
+          <option value="C2:UC_IJ3JKJ">Менеджер определен</option>
+          <option value="C2:3">Недозвон</option>
+          <option value="C2:UC_2ANUUW">Каталог</option>
+          <option value="C2:6">Переговоры</option>
+          <option value="C2:UC_MQDKVZ">Тишина</option>
+          <option value="C2:2">КП</option>
+          <option value="C2:PREPARATION">Выставили счет</option>
+          <option value="C2:1">Согласование</option>
+          <option value="C2:PREPAYMENT_INVOICE">Получили аванс</option>
+          <option value="C2:EXECUTING">Запустили на производство</option>
+          <option value="C2:FINAL_INVOICE">Готово к отправке</option>
+        </select>
+      </div>
+      <div class="nf-group">
         <div class="nf-label">Примечание</div>
         <textarea id="np-notes" class="nf-inp" rows="2" style="resize:none" placeholder="Дополнительно..."></textarea>
       </div>
@@ -1195,7 +1214,7 @@ function printKP({id,code,created_at,attrs,unit_price,total_price,qty}){
   +'try{'
   +'const res=await fetch("https://n8n-grupparosta.chickenkiller.com/webhook/kp-from-site",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(_kpData)});'
   +'const json=await res.json();'
-  +'if(json.ok){btn.textContent="✅ Отправлено";status.innerHTML="Сделка #"+json.deal_id+" создана в Битрикс24"+(json.pdf_url?"<br><a href=\'"+json.pdf_url+"\' target=\'_blank\' style=\'color:#1e3a5f;font-weight:700\'>Скачать КП (PDF)</a>":"");status.style.color="#16a34a";}'
+  +'if(json.ok){btn.textContent="✅ Отправлено";status.textContent="Сделка #"+json.deal_id+" создана в Битрикс24. КП формируется и будет в сделке через ~30 сек.";status.style.color="#16a34a";}'
   +'else{throw new Error(JSON.stringify(json));}'
   +'}catch(e){btn.disabled=false;btn.textContent="📤 Отправить в Битрикс";status.textContent="Ошибка: "+e.message;status.style.color="#dc2626";}'
   +'}'
@@ -1215,7 +1234,7 @@ function npNearest(arr,v){ return arr.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?
 
 async function openNP(){
   ['np-width','np-depth','np-client-name','np-client-phone',
-   'np-client-email','np-deal-title','np-notes']
+   'np-client-email','np-deal-title','np-notes','np-stage']
     .forEach(id=>{ const e=$v(id); if(e) e.value=''; });
   
   const mgrEl=$v('np-manager');
@@ -1756,6 +1775,7 @@ async function npSave(){
     deal_title:   $v('np-deal-title').value.trim()||null,
     notes:        $v('np-notes').value.trim()||null,
     price_type:   npPT,
+    stage_id:     $v('np-stage').value||null,
   };
   
   if(window._attachToDeal) payload.attach_to_deal = window._attachToDeal;
@@ -1776,7 +1796,6 @@ async function npSave(){
       
       if(res.deal_id){
         const url='https://cz-mebel.bitrix24.ru/crm/deal/details/'+res.deal_id+'/';
-        if(res.pdf_url) window.open(res.pdf_url,'_blank');
         if(confirm('✅ Сделка #'+res.deal_id+' создана в Битрикс24!\nОткрыть сделку?')) window.open(url,'_blank');
       }
     } else {
