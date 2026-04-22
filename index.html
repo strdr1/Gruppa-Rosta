@@ -1028,16 +1028,21 @@ async function loadDealKP(dealId){
   const sec = document.getElementById('deal-kp-'+dealId);
   if(!sec) return;
   try {
-    const r = await fetch('https://cz-mebel.bitrix24.ru/rest/1830/w2wxftu6fa0yecy7/crm.deal.get?id='+dealId);
+    const r = await fetch('https://cz-mebel.bitrix24.ru/rest/1830/w2wxftu6fa0yecy7/crm.timeline.comment.list?filter[ENTITY_TYPE]=deal&filter[ENTITY_ID]='+dealId);
     const data = await r.json();
-    const kp = data.result && data.result.UF_CRM_1657279819764;
-    if(!kp || !kp.downloadUrl){
+    const comments = data.result || [];
+    let pdfUrl = null;
+    for(const c of comments){
+      const text = c.COMMENT || c.content || '';
+      const m = text.match(/https:\/\/storage\.googleapis\.com\/[^\s"<]+/);
+      if(m){ pdfUrl = m[0]; break; }
+    }
+    if(!pdfUrl){
       sec.innerHTML = '<div class="oc-sec-label">КП</div><div style="color:#8c9daf;font-size:12px">КП не сформировано</div>';
       return;
     }
-    const url = 'https://cz-mebel.bitrix24.ru' + kp.downloadUrl;
     sec.innerHTML = '<div class="oc-sec-label">КП</div>'
-      + `<button class="btn primary" style="margin-top:8px" onclick="openKPModal('${url}')">Просмотр КП</button>`;
+      + `<button class="btn primary" style="margin-top:8px" onclick="openKPModal('${pdfUrl}')">Просмотр КП</button>`;
   } catch(e){
     if(sec) sec.innerHTML = '<div class="oc-sec-label">КП</div><div style="color:#c0392b;font-size:12px">Ошибка загрузки</div>';
   }
