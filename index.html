@@ -1195,7 +1195,7 @@ function printKP({id,code,created_at,attrs,unit_price,total_price,qty}){
   +'try{'
   +'const res=await fetch("https://n8n-grupparosta.chickenkiller.com/webhook/kp-from-site",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(_kpData)});'
   +'const json=await res.json();'
-  +'if(json.ok){btn.textContent="✅ Отправлено";status.textContent="Сделка #"+json.deal_id+" создана в Битрикс24";status.style.color="#16a34a";}'
+  +'if(json.ok){btn.textContent="✅ Отправлено";status.innerHTML="Сделка #"+json.deal_id+" создана в Битрикс24"+(json.pdf_url?"<br><a href=\'"+json.pdf_url+"\' target=\'_blank\' style=\'color:#1e3a5f;font-weight:700\'>Скачать КП (PDF)</a>":"");status.style.color="#16a34a";}'
   +'else{throw new Error(JSON.stringify(json));}'
   +'}catch(e){btn.disabled=false;btn.textContent="📤 Отправить в Битрикс";status.textContent="Ошибка: "+e.message;status.style.color="#dc2626";}'
   +'}'
@@ -1776,6 +1776,7 @@ async function npSave(){
       
       if(res.deal_id){
         const url='https://cz-mebel.bitrix24.ru/crm/deal/details/'+res.deal_id+'/';
+        if(res.pdf_url) window.open(res.pdf_url,'_blank');
         if(confirm('✅ Сделка #'+res.deal_id+' создана в Битрикс24!\nОткрыть сделку?')) window.open(url,'_blank');
       }
     } else {
