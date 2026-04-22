@@ -646,7 +646,7 @@ const B24_STAGE = {
 
 // ═══ STATE ══════════════════════════════════
 const TG_TOKEN = '8090054234:AAHnoNv7Vt3LrK7pbPXPMB5Xcmvxgc3WIBc';
-const N8N_BASE = 'http://176.12.78.255:5678/webhook';
+const N8N_BASE = 'https://n8n-grupparosta.chickenkiller.com/webhook';
 let projects  = [];   // сделки из Битрикс
 let activeId  = null;
 let listFilter= 'C2:NEW';
@@ -1236,7 +1236,7 @@ function printKP({id,code,created_at,attrs,unit_price,total_price,qty}){
   +'btn.disabled=true;btn.textContent="⏳ Отправка…";'
   +'status.textContent="";'
   +'try{'
-  +'const res=await fetch("http://176.12.78.255:5678/webhook/kp-from-site",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(_kpData)});'
+  +'const res=await fetch("https://n8n-grupparosta.chickenkiller.com/webhook/kp-from-site",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(_kpData)});'
   +'const json=await res.json();'
   +'if(json.ok){btn.textContent="✅ Отправлено";status.textContent="Сделка #"+json.deal_id+" создана в Битрикс24";status.style.color="#16a34a";}'
   +'else{throw new Error(JSON.stringify(json));}'
