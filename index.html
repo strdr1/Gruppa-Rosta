@@ -1889,23 +1889,9 @@ async function npSave(){
     } catch(e) { return {characteristics: '', image_url: ''}; }
   }
 
-  async function fetchImageBase64(image_url) {
-    if (!image_url) return '';
-    try {
-      const r = await fetch(image_url);
-      const blob = await r.blob();
-      return await new Promise(resolve => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
-    } catch(e) { return ''; }
-  }
-
   btn.textContent='Загрузка данных…';
   const enrichedItems = await Promise.all(items.map(async p => {
     const vd = await fetchVariantData(p.variant_code, p.attrs);
-    const imgB64 = await fetchImageBase64(vd.image_url);
     return {
       variant_code:    p.variant_code,
       material_code:   p.material_code,
@@ -1915,7 +1901,8 @@ async function npSave(){
       total_price:     p.total_price,
       attrs:           p.attrs,
       characteristics: vd.characteristics || '',
-      image_b64:       imgB64 || ''
+      image_url:       vd.image_url || '',
+      image_b64:       ''
     };
   }));
 
