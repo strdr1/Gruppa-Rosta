@@ -1819,9 +1819,10 @@ function npAddToCart(){
 function npRenderCart(){
   const cart=$v('np-cart');
   const list=$v('np-cart-list');
-  if(!npCart.length){ cart.style.display='none'; $v('np-kp-btn').disabled=!npRes; return; }
+  if(!npCart.length){ cart.style.display='none'; $v('np-kp-btn').disabled=!npRes; $v('np-save-btn').disabled=!npRes; return; }
   cart.style.display='block';
   $v('np-kp-btn').disabled=false;
+  $v('np-save-btn').disabled=false;
   list.innerHTML=npCart.map((p,i)=>
     `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #e0f2fe">
       <span>${esc(p.variant_name)} × ${p.qty} шт. — ${fmt(p.total_price)} руб.</span>
