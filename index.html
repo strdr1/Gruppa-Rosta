@@ -1952,15 +1952,12 @@ async function npSave(){
   async function fetchImageAsBase64(url) {
     if (!url) return '';
     try {
-      const r = await fetch(url);
+      // Use n8n proxy to bypass CORS
+      const proxyUrl = 'https://n8n-grupparosta.chickenkiller.com/webhook/img-proxy?url=' + encodeURIComponent(url);
+      const r = await fetch(proxyUrl);
       if (!r.ok) return '';
-      const blob = await r.blob();
-      return await new Promise((resolve, reject) => {
-        const fr = new FileReader();
-        fr.onload = () => resolve(fr.result);
-        fr.onerror = () => resolve('');
-        fr.readAsDataURL(blob);
-      });
+      const text = await r.text();
+      return text.startsWith('data:') ? text : '';
     } catch(e) { return ''; }
   }
 
