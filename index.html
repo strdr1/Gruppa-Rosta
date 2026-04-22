@@ -8,7 +8,6 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-apple-system,'Inter',sans-serif;font-size:14px;color:#1e2f3d}
 
-/* ── LAYOUT ── */
 .shell{height:100vh;background:white;display:flex;flex-direction:column;overflow:hidden}
 .hdr{padding:12px 24px;border-bottom:1px solid #e3e9ef;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;height:58px}
 .hdr-logo{font-size:17px;font-weight:700;color:#1e2f3d}
@@ -21,7 +20,6 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .left{border-right:1px solid #edf2f7;display:flex;flex-direction:column;overflow:hidden}
 .right{overflow:hidden;padding:0}
 
-/* ── СПИСОК ── */
 .list-head{padding:14px 14px 8px}
 .list-title{font-weight:600;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .demo-pill{font-size:10px;padding:1px 7px;border-radius:10px;background:#fff8e0;color:#9a6a00;border:1px solid #f5e090;font-weight:600}
@@ -41,7 +39,6 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .pc-desc{font-size:11px;color:#4a6375;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
 .pc-bottom{font-size:11px;color:#7a8fa0;display:flex;gap:10px}
 
-/* ── БЕЙДЖИ СТАТУСА ── */
 .badge{font-size:10px;padding:2px 8px;border-radius:12px;font-weight:700;white-space:nowrap}
 .badge-draft    {background:#f0f3f7;color:#5a7080}
 .badge-clarify  {background:#fff1e0;color:#aa5f2a}
@@ -50,13 +47,11 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .badge-won      {background:#d1fae5;color:#065f46}
 .badge-lose     {background:#fde8e8;color:#9b1c1c}
 
-/* ── ПУСТОЕ СОСТОЯНИЕ ── */
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;color:#8c9daf;gap:10px;text-align:center}
 .empty-icon{font-size:44px;opacity:.4}
 .empty-title{font-size:15px;font-weight:600;color:#617e98}
 .empty-sub{font-size:12px;line-height:1.7;max-width:260px}
 
-/* ── ЕДИНАЯ КАРТОЧКА ЗАЯВКИ ── */
 .oc{background:white;border:1px solid #e3eaf2;border-radius:16px;overflow:hidden;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .oc-head{padding:18px 22px 16px;border-bottom:1px solid #f0f3f7}
 .oc-head-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
@@ -65,7 +60,6 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .oc-meta span{display:flex;align-items:center;gap:3px}
 .oc-raw{font-size:12px;color:#617e98;font-style:italic;margin-top:10px;padding:8px 12px;background:#f8f9fb;border-radius:8px;border-left:3px solid #dae2ec}
 
-/* Статус-пайплайн */
 .oc-pipe{display:flex;align-items:center;margin-top:14px}
 .sp-step{font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;border:1.5px solid #e3eaf2;color:#aab8c6;background:white;white-space:nowrap}
 .sp-step.done{color:#2155a0;background:#eef4ff;border-color:#c5d8ed}
@@ -73,7 +67,6 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .sp-line{flex:1;height:2px;background:#e3eaf2;margin:0 3px;min-width:6px}
 .sp-line.done{background:#c5d8ed}
 
-/* Секции */
 .oc-sec{padding:16px 22px;border-bottom:1px solid #f0f3f7}
 .oc-sec-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#b0bec8;margin-bottom:10px}
 .oc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px}
@@ -84,12 +77,10 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .oc-progress{height:4px;background:#edf2f7;border-radius:4px;overflow:hidden;margin-top:12px}
 .oc-progress-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,#4ade80,#16a34a);transition:.3s}
 
-/* Итог */
 .oc-total{padding:16px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f0f3f7}
 .oc-total-label{font-size:14px;font-weight:600;color:#617e98}
 .oc-total-price{font-size:30px;font-weight:800;color:#1a6f4b;letter-spacing:-.5px}
 
-/* Действия */
 .oc-actions{padding:14px 22px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .btn{padding:9px 18px;border-radius:24px;border:1.5px solid #cddae8;background:white;font-size:13px;font-weight:500;color:#1e2f3d;cursor:pointer;transition:.12s;white-space:nowrap}
 .btn:hover{background:#f4f7fb;border-color:#aabdcc}
@@ -99,32 +90,29 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .btn-recalc:hover{background:#edf2f7;color:#1e2f3d}
 .btn-recalc:disabled{opacity:.5;cursor:not-allowed}
 
-/* Статус карточки */
 .card-sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
 .est-sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#617e98;margin-bottom:12px}
 
-/* ── MISC ── */
 .spinner{width:14px;height:14px;border:2px solid #e1e9f1;border-top-color:#3b5e7a;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── ФОРМА НОВОЙ ЗАЯВКИ ── */
 .np-btn{margin:10px 14px 2px;padding:9px;border-radius:10px;border:1.5px dashed #c8d8e8;background:#f5f8fb;font-size:13px;font-weight:500;color:#4a6f8a;cursor:pointer;text-align:center;transition:.12s;width:calc(100% - 28px);display:block}
 .np-btn:hover{background:#e8f0f8;border-color:#9ab5cc;color:#1e2f3d}
-/* overlay + modal */
+
 .np-ov{display:none;position:fixed;inset:0;background:rgba(10,20,34,.55);z-index:900;align-items:center;justify-content:center}
 .np-ov.open{display:flex}
 .np-modal{background:#fff;border-radius:0;width:100vw;height:100vh;box-shadow:none;display:flex;flex-direction:column;overflow:hidden}
-/* header */
+
 .np-hdr{padding:18px 24px 14px;border-bottom:1px solid #edf2f7;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
 .np-hdr h3{font-size:16px;font-weight:700;color:#1e2f3d;margin:0}
 .np-hdr-x{width:30px;height:30px;border-radius:50%;border:none;background:#f0f3f7;color:#617e98;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.12s}
 .np-hdr-x:hover{background:#e0e8f0;color:#1e2f3d}
-/* two columns */
+
 .np-cols{display:flex;flex:1;overflow:hidden;min-height:0}
 .np-left{width:360px;flex-shrink:0;border-right:1px solid #edf2f7;display:flex;flex-direction:column;overflow-y:auto;padding:18px 20px;gap:12px}
 .np-left::-webkit-scrollbar{width:3px}.np-left::-webkit-scrollbar-thumb{background:#d0dce8;border-radius:3px}
 .np-right{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#f7f9fc}
-/* left form elements */
+
 .nf-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#8c9daf;margin-bottom:3px}
 .nf-inp{padding:9px 12px;border:1.5px solid #e3eaf2;border-radius:9px;font-size:13px;color:#1e2f3d;outline:none;font-family:inherit;transition:.15s;background:#fff;width:100%;box-sizing:border-box}
 .nf-inp:focus{border-color:#9ab5cc}
@@ -144,17 +132,17 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .np-sw-item.np-sw-empty:hover{background:none}
 .nf-err.on{display:block}
 .nf-hint{font-size:10px;color:#9ab0c4;margin-top:2px}
-/* right: price card */
+
 .np-price-card{flex-shrink:0;padding:14px 18px;background:#fff;border-bottom:1px solid #edf2f7;display:none}
 .np-price-big{font-size:28px;font-weight:800;color:#1a6f4b;line-height:1}
 .np-price-meta{font-size:11px;color:#8c9daf;margin-top:4px}
 .np-stock-in{background:#e6f4ea;color:#1a6f4b}
 .np-stock-out{background:#fff3cd;color:#856404}
-/* right: matrix */
+
 .np-matrix-wrap{flex:1;overflow-y:auto;padding:14px 16px}
 .np-matrix-wrap::-webkit-scrollbar{width:3px}.np-matrix-wrap::-webkit-scrollbar-thumb{background:#d0dce8;border-radius:3px}
 .np-hint-idle{padding:60px 20px;text-align:center;color:#b0bec8;font-size:13px;line-height:1.7}
-/* matrix table */
+
 .mx-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:16px}
 .mx-table thead th{background:#1e2f3d;color:#fff;padding:6px 8px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
 .mx-table thead th:first-child{text-align:left;border-radius:6px 0 0 0}
@@ -168,7 +156,7 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .mx-row td.mx-cost{text-align:right;white-space:nowrap;font-weight:600;color:#1e2f3d}
 .mx-qty{width:62px;border:1.5px solid #dce8f4;border-radius:5px;padding:3px 6px;font-size:11px;text-align:right;color:#1e2f3d;font-family:inherit;background:#fff;outline:none;box-sizing:border-box}
 .mx-qty:focus{border-color:#4a90d9;background:#f0f8ff}
-/* totals */
+
 .mx-sub td{border-top:2px solid #e0e8f2;padding:6px 8px;font-weight:600;color:#617e98;font-size:11px}
 .mx-sub td.mx-r{text-align:right}
 .mx-labor td{padding:5px 8px;color:#3d5166;font-size:11px;background:#fafbfd}
@@ -177,7 +165,7 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .mx-labor-inp:focus{border-color:#4a90d9}
 .mx-total td{border-top:3px solid #1e2f3d;padding:8px 8px;font-weight:800;font-size:14px;color:#1e2f3d}
 .mx-total td.mx-r{text-align:right;color:#1a6f4b}
-/* accessories */
+
 .mx-acc-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#8c9daf;margin:4px 0 8px}
 .mx-acc-list{display:flex;flex-direction:column;gap:5px}
 .mx-acc-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1.5px solid #edf2f7;border-radius:8px;cursor:pointer;transition:.12s;font-size:12px;background:#fff}
@@ -187,19 +175,18 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .mx-acc-item.on .mx-acc-cb{background:#1e2f3d;border-color:#1e2f3d;color:#fff}
 .mx-acc-name{flex:1;color:#1e2f3d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mx-acc-price{color:#617e98;white-space:nowrap}
-/* footer */
+
 .np-ftr{padding:14px 20px;border-top:1px solid #edf2f7;display:flex;gap:10px;flex-shrink:0;background:#fff}
 .np-footer{padding:16px 24px;border-top:1px solid #f0f3f7;display:flex;gap:10px;flex-shrink:0}
 .two-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .tab-view{display:none!important}.tab-view.active{display:grid!important}
 .tab-view.active.lk-body{grid-template-columns:300px 1fr}
-/* ── HDR TABS ── */
+
 .hdr-tabs{display:flex;gap:4px;background:#f0f3f7;padding:4px;border-radius:12px}
 .hdr-tab{padding:7px 18px;border-radius:8px;border:none;background:transparent;font-size:13px;font-weight:500;color:#617e98;cursor:pointer;transition:.12s;white-space:nowrap}
 .hdr-tab.active{background:white;color:#1e2f3d;box-shadow:0 2px 6px rgba(0,0,0,.08)}
 .hdr-tab:hover:not(.active){color:#1e2f3d}
 
-/* ── SPLIT LAYOUT правой панели ── */
 .detail-split{display:grid;grid-template-columns:1fr 360px;height:100%;overflow:hidden}
 .detail-left{overflow-y:auto;padding:20px 22px}
 .detail-left::-webkit-scrollbar{width:4px}
@@ -219,12 +206,10 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .ichat-send:disabled{opacity:.45;cursor:not-allowed}
 .ichat-empty{text-align:center;color:#b0bec8;font-size:12px;padding:40px 0}
 
-/* ── ЛК КЛИЕНТА ── */
 .lk-body{grid-template-columns:300px 1fr;flex:1;overflow:hidden;min-height:0}
 .lk-left{border-right:1px solid #edf2f7;display:flex;flex-direction:column;background:#fafbfc;overflow:hidden}
 .lk-right{overflow-y:auto;background:white}
 
-/* LK — логин */
 .lk-login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 120px);padding:40px;text-align:center;background:white}
 .lk-login-icon{font-size:52px;margin-bottom:16px}
 .lk-login h2{font-size:20px;font-weight:700;color:#1e2f3d;margin-bottom:6px}
@@ -235,7 +220,6 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .lk-btn-enter{padding:14px;border-radius:12px;border:none;background:#1e2f3d;color:white;font-size:15px;font-weight:600;cursor:pointer;transition:.15s;width:100%}
 .lk-btn-enter:hover{background:#2d4460}
 
-/* LK — список заказов */
 .lk-list-head{padding:16px 14px 10px;border-bottom:1px solid #edf2f7}
 .lk-client-name{font-weight:700;font-size:14px;color:#1e2f3d;margin-bottom:2px}
 .lk-client-phone{font-size:12px;color:#617e98}
@@ -254,7 +238,6 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .lk-new-order{margin:8px;padding:11px;border-radius:10px;border:1.5px dashed #cddae8;background:#f9fbfd;font-size:13px;color:#617e98;cursor:pointer;text-align:center;transition:.12s}
 .lk-new-order:hover{background:#f0f4f9;color:#1e2f3d}
 
-/* LK — детали заказа + чат */
 .lk-detail{display:flex;flex-direction:column;height:100%}
 .lk-order-info{padding:20px 22px 14px;border-bottom:1px solid #edf2f7}
 .lk-oi-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
@@ -262,7 +245,6 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .lk-oi-meta{font-size:12px;color:#617e98;line-height:1.7;margin-top:3px}
 .lk-oi-desc{font-size:13px;color:#4a6375;background:#f5f7fa;border-radius:8px;padding:9px 12px;margin-top:8px;line-height:1.5;font-style:italic}
 
-/* LK — статус в ЛК */
 .lk-status-row{display:flex;align-items:center;gap:8px;margin-top:10px}
 .lk-st-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .lk-st-dot.draft{background:#94a3b8}
@@ -272,7 +254,6 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .lk-st-text{font-size:13px;font-weight:600;color:#1e2f3d}
 .lk-st-hint{font-size:12px;color:#617e98}
 
-/* LK — смета в ЛК */
 .lk-estimate{margin:0 22px 0;padding:14px 16px;background:#f0fdf4;border-radius:12px;border:1.5px solid #bbf7d0}
 .lk-est-title{font-size:12px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
 .lk-est-row{display:flex;justify-content:space-between;font-size:13px;color:#4a6375;padding:4px 0}
@@ -280,7 +261,6 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .lk-est-total-label{font-size:14px;font-weight:600;color:#15803d}
 .lk-est-total-price{font-size:24px;font-weight:800;color:#15803d}
 
-/* LK — чат */
 .lk-chat-wrap{flex:1;display:flex;flex-direction:column;padding:0 22px;overflow:hidden}
 .lk-chat-title{font-size:12px;font-weight:700;color:#617e98;text-transform:uppercase;letter-spacing:.4px;padding:14px 0 10px}
 .lk-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-bottom:14px}
@@ -308,20 +288,16 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .lk-send:hover{background:#2d4460}
 .lk-send:disabled{opacity:.4;cursor:not-allowed}
 
-/* LK — пустой чат */
 .lk-no-order{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;text-align:center;color:#8c9daf}
 
-/* Manager reply input */
 .mgr-reply{display:flex;gap:8px;margin-top:6px}
 .mgr-reply input{flex:1;padding:10px 14px;border:1.5px solid #dae2ec;border-radius:10px;font-size:13px;outline:none;font-family:inherit;color:#1e2f3d;transition:.15s}
 .mgr-reply input:focus{border-color:#9ab0c4}
 .mgr-reply button{padding:10px 16px;border-radius:10px;border:none;background:#2d4460;color:white;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
 
-/* LK — новая заявка модалка */
 .lk-new-form{padding:22px;border-top:1px solid #edf2f7;background:#fafbfc}
 .lk-new-form textarea{width:100%;padding:11px 14px;border:1.5px solid #dae2ec;border-radius:10px;font-size:13px;outline:none;font-family:inherit;color:#1e2f3d;resize:none;height:80px;margin-bottom:8px;transition:.15s}
 .lk-new-form textarea:focus{border-color:#9ab0c4}
-
 
 @media(max-width:860px){
   .body,.lk-body{grid-template-columns:1fr}
@@ -330,7 +306,6 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
   .shell{margin:8px}
 }
 
-/* ── CHAT MODAL ── */
 .chat-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .chat-overlay.open{opacity:1;pointer-events:all}
 .chat-win{width:min(680px,96vw);height:82vh;background:white;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.3);transform:translateY(24px);transition:transform .2s}
@@ -378,7 +353,7 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
     <button class="hdr-refresh" onclick="loadProjects()">⟳ Обновить</button>
   </div>
 
-  <!-- ══ ВИД: МЕНЕДЖЕР ══ -->
+  
   <div id="view-manager" class="tab-view active body">
 
     <div class="left">
@@ -413,10 +388,10 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 
   </div>
 
-  <!-- ══ ВИД: ЛК КЛИЕНТА ══ -->
+  
   <div id="view-lk" class="tab-view lk-body">
 
-    <!-- LK: логин или список -->
+    
     <div class="lk-left" id="lk-left">
       <div id="lk-login-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px;text-align:center">
         <div style="font-size:36px;margin-bottom:12px">👤</div>
@@ -436,7 +411,7 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
       </div>
     </div>
 
-    <!-- LK: правая часть -->
+    
     <div class="lk-right" id="lk-right">
       <div class="lk-no-order">
         <div style="font-size:40px;margin-bottom:12px;opacity:.4">💬</div>
@@ -447,10 +422,8 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 
   </div>
 
-
 </div>
 
-<!-- ══ ФОРМА НОВОЙ ЗАЯВКИ ══ -->
 <div id="np-overlay" class="np-ov">
   <div class="np-modal">
     <div class="np-hdr">
@@ -458,9 +431,9 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
       <button class="np-hdr-x" onclick="closeNP()">×</button>
     </div>
     <div class="np-cols">
-    <!-- ─── ЛЕВАЯ КОЛОНКА: форма ─── -->
+    
     <div class="np-left">
-      <!-- Серия -->
+      
       <div class="nf-group">
         <div class="nf-label">Серия *</div>
         <div class="np-sw" id="np-sw-wrap">
@@ -471,7 +444,7 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
           <div class="np-sw-list" id="np-sw-list"></div>
         </div>
       </div>
-      <!-- Ширина + Глубина -->
+      
       <div class="nf-row2">
         <div class="nf-group">
           <div class="nf-label">Ширина, мм *</div>
@@ -484,20 +457,20 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
           <div id="np-depth-hint" class="nf-hint"></div>
         </div>
       </div>
-      <!-- Материал -->
+      
       <div class="nf-group" id="np-mat-wrap">
         <div class="nf-label">Материал поверхности *</div>
         <select id="np-mat" class="nf-inp" onchange="npAutoCalcNow()">
           <option value="">— сначала выберите позицию —</option>
         </select>
       </div>
-      <!-- Доп. параметр (виброизоляция и т.п.) -->
+      
       <div class="nf-group" id="np-vib-wrap" style="display:none">
         <div class="nf-label" id="np-vib-label">Виброизоляция, мм *</div>
         <select id="np-vib" class="nf-inp" onchange="npVibChanged()">
         </select>
       </div>
-      <!-- Количество + Тип цены -->
+      
       <div class="nf-row2">
         <div class="nf-group">
           <div class="nf-label">Количество</div>
@@ -512,7 +485,7 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
         </div>
       </div>
       <hr class="nf-sep">
-      <!-- Клиент -->
+      
       <div class="nf-group">
         <div class="nf-label">Имя клиента</div>
         <input type="text" id="np-client-name" class="nf-inp" placeholder="Иванов Иван">
@@ -541,23 +514,23 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
         <textarea id="np-notes" class="nf-inp" rows="2" style="resize:none" placeholder="Дополнительно..."></textarea>
       </div>
       <div id="np-err" class="nf-err"></div>
-    </div><!-- /np-left -->
+    </div>
 
-    <!-- ─── ПРАВАЯ КОЛОНКА: результат + матрица ─── -->
+    
     <div class="np-right">
-      <!-- Цена (появляется после расчёта) -->
+      
       <div id="np-price-card" class="np-price-card">
         <div class="np-price-big" id="np-price-val">—</div>
         <div class="np-price-meta" id="np-price-meta"></div>
       </div>
 
-      <!-- Скроллируемая область: хинт / матрица / допы -->
+      
       <div class="np-matrix-wrap" id="np-matrix-wrap">
         <div class="np-hint-idle" id="np-idle-hint">
           Выберите серию и ширину —<br>цена и матрица обновятся автоматически
         </div>
 
-        <!-- Матрица себестоимости -->
+        
         <div id="np-mx-block" style="display:none">
           <table class="mx-table">
             <thead>
@@ -587,15 +560,15 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
           </table>
         </div>
 
-        <!-- Допы -->
+        
         <div id="np-acc-block" style="display:none;margin-top:16px">
           <div class="mx-acc-title">Комплектующие (допы)</div>
           <div class="mx-acc-list" id="np-acc-list"></div>
           <div id="np-acc-total" style="font-size:11px;color:#617e98;margin-top:6px;text-align:right;font-weight:600"></div>
         </div>
       </div>
-    </div><!-- /np-right -->
-    </div><!-- /np-cols -->
+    </div>
+    </div>
 
     <div class="np-ftr">
       <button class="btn" onclick="closeNP()">Отмена</button>
@@ -606,11 +579,10 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 </div>
 
 <script>
-// ═══ CONFIG ════════════════════════════════
+
 const SB_URL = 'https://uzijscrcqmtpkvyiewok.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6aWpzY3JjcW10cGt2eWlld29rIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI2NDUxNiwiZXhwIjoyMDg5ODQwNTE2fQ.53FP7qfAO4q5r22i5SKORqWCw6fSOqXW_vZGXxmYoMA';
 
-// ═══ СПРАВОЧНИКИ ═══════════════════════════
 const MAT_NAME = {
   KRG:'Керамогранит (КРГ)', KRM:'Монолитная керамика (КРМ)',
   PLS:'Пластик Слопласт (ПЛС)', PLS_LAB:'ПЛС-ЛАБ',
@@ -626,14 +598,14 @@ const MISS_LABEL = {
   series:'Серия стола', width_mm:'Ширина (мм)', depth_mm:'Глубина (мм)',
   material_code:'Материал поверхности', quantity:'Количество', price_type:'Тип цены'
 };
-// Статусы из Supabase (устаревшие, для ЛК)
+
 const ST = {
   draft:      {label:'Черновик',    cls:'badge-draft'},
   clarifying: {label:'Уточнение',   cls:'badge-clarify'},
   calculated: {label:'Рассчитано',  cls:'badge-calc'},
   sent:       {label:'Отправлено',  cls:'badge-sent'},
 };
-// Статусы Битрикс24 воронки C2
+
 const B24_STAGE = {
   'C2:NEW':                  {label:'Новая',           cls:'badge-draft'},
   'C2:2':                    {label:'Клиент',          cls:'badge-clarify'},
@@ -644,21 +616,18 @@ const B24_STAGE = {
   'C2:LOSE':                 {label:'Проигрыш',        cls:'badge-lose'},
 };
 
-// ═══ STATE ══════════════════════════════════
 const TG_TOKEN = '8090054234:AAHnoNv7Vt3LrK7pbPXPMB5Xcmvxgc3WIBc';
 const N8N_BASE = 'https://n8n-grupparosta.chickenkiller.com/webhook';
-let projects  = [];   // сделки из Битрикс
+let projects  = [];   
 let activeId  = null;
 let listFilter= 'C2:NEW';
 let pollTimer = null;
 let dealSearchQ = '';
 let dealSearchTimer = null;
 
-// LK state
 let lkPhone   = localStorage.getItem('lk_phone') || null;
 let lkOrderId = null;
 
-// ═══ UTILS ══════════════════════════════════
 const fmt  = n => Number(n).toLocaleString('ru-RU');
 const esc  = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const fmtD = s => {
@@ -669,14 +638,12 @@ const fmtD = s => {
 };
 const fmtT = s => new Date(s).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
 
-// ═══ SUPABASE ═══════════════════════════════
 const H = ()=>({'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'});
 const sbGet   = async p => { const r=await fetch(`${SB_URL}/rest/v1/${p}`,{headers:H()}); if(!r.ok) throw new Error(await r.text()); return r.json(); };
 const sbPost  = async (p,b) => { const r=await fetch(`${SB_URL}/rest/v1/${p}`,{method:'POST',headers:H(),body:JSON.stringify(b)}); if(!r.ok) throw new Error(await r.text()); return r.json(); };
 const sbPatch = async (p,b) => { const r=await fetch(`${SB_URL}/rest/v1/${p}`,{method:'PATCH',headers:H(),body:JSON.stringify(b)}); if(!r.ok) throw new Error(await r.text()); return r.json(); };
 const rpc     = async (fn,params) => { const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:H(),body:JSON.stringify(params)}); if(!r.ok) throw new Error(await r.text()); return r.json(); };
 
-// ═══ ПЕРЕКЛЮЧЕНИЕ ВИДОВ ═════════════════════
 function switchView(name, el){
   document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.hdr-tab').forEach(b=>b.classList.remove('active'));
@@ -685,7 +652,6 @@ function switchView(name, el){
   if(name==='lk') lkInit();
 }
 
-// ═══ ЛК КЛИЕНТА ═════════════════════════════
 function lkInit(){
   if(lkPhone) lkShowOrders();
   else        lkShowLogin();
@@ -783,7 +749,7 @@ async function lkRenderDetail(id){
     sent:       'КП отправлено на ваш email',
   };
 
-  // Смета (если есть цена)
+  
   let estimateHTML = '';
   if(item?.unit_price){
     const qty   = attrs.quantity||item.quantity||1;
@@ -799,10 +765,10 @@ async function lkRenderDetail(id){
     </div>`;
   }
 
-  // Сообщения чата
+  
   const bubbles = msgs.length
     ? msgs.map(m=>{
-        // outgoing = от менеджера, incoming = от клиента
+        
         const isMgr = m.direction==='outgoing';
         const isTg  = m.structured_data?.source === 'telegram';
         const name  = isMgr ? 'Бот' : 'Вы';
@@ -873,7 +839,7 @@ async function lkSend(id){
     await loadProjects(dealSearchQ);
     lkRenderDetail(id);
   } catch(e){
-    // Демо — добавить локально
+    
     const el = document.getElementById('lk-msgs');
     if(el){
       el.innerHTML += `<div class="lk-msg me"><div class="lk-ava cli">Я</div><div class="lk-bbl cli"><div class="lk-msg-sender">Вы</div>${esc(text)}<div class="lk-msg-time">${fmtT(new Date())}</div></div></div>`;
@@ -900,7 +866,6 @@ async function lkNewOrder(){
   } catch(e){ alert('Ошибка: '+e.message); }
 }
 
-// ═══ ЗАГРУЗКА ═══════════════════════════════
 async function loadProjects(q){
   const el = document.getElementById('plist');
   el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;color:#8c9daf;font-size:13px;padding:16px 6px"><div class="spinner"></div> Загрузка…</div>';
@@ -925,7 +890,6 @@ function onDealSearch(val){
   dealSearchTimer = setTimeout(()=>loadProjects(dealSearchQ), 400);
 }
 
-// ═══ СПИСОК ══════════════════════════════════
 function setFilter(f, el){
   listFilter = f;
   document.querySelectorAll('.f-pill').forEach(p=>p.classList.remove('on'));
@@ -958,7 +922,6 @@ function renderList(){
   }).join('');
 }
 
-// ═══ ВЫБОР ЗАЯВКИ ══════════════════════════
 async function pick(id){
   activeId = id;
   renderList();
@@ -970,7 +933,6 @@ async function pick(id){
   }, 30000);
 }
 
-// ═══ ПРАВАЯ ПАНЕЛЬ — карточка сделки Битрикс ════════
 async function renderRight(id){
   const p = projects.find(x=>String(x.id)===String(id));
   const rightEl = document.getElementById('right');
@@ -1009,7 +971,7 @@ async function renderRight(id){
     </div>
   </div>`;
 
-  // Загружаем товары сделки
+  
   loadDealProducts(id);
 }
 
@@ -1053,7 +1015,6 @@ function openNPforDeal(dealId){
   }
 }
 
-// Поиск клиента по телефону в Битрикс24
 let _phoneLookupTimer = null;
 async function npPhoneLookup(raw){
   const hint = $v('np-phone-hint');
@@ -1064,7 +1025,7 @@ async function npPhoneLookup(raw){
     if(hint) hint.textContent = '🔍 поиск…';
     try {
       const B24 = 'https://cz-mebel.bitrix24.ru/rest/1830/w2wxftu6fa0yecy7/';
-      // Ищем дубликат по телефону
+      
       const dupRes = await fetch(B24+'crm.duplicate.findbycomm.json?type=PHONE&values[]='+encodeURIComponent(raw));
       const dupData = await dupRes.json();
       const contactIds = dupData.result?.CONTACT || [];
@@ -1072,7 +1033,7 @@ async function npPhoneLookup(raw){
         if(hint) hint.textContent = '— не найден';
         return;
       }
-      // Берём первый найденный контакт
+      
       const cRes = await fetch(B24+'crm.contact.get.json?id='+contactIds[0]);
       const cData = await cRes.json();
       const c = cData.result;
@@ -1086,7 +1047,6 @@ async function npPhoneLookup(raw){
   }, 600);
 }
 
-// заглушка чтобы старые функции не падали
 async function loadMsgs(){ return []; }
 
 function buildDealPipe(stageId){
@@ -1100,12 +1060,10 @@ function buildDealPipe(stageId){
   }).join('');
 }
 
-// ═══ ЗАГЛУШКИ УДАЛЁННЫХ ФУНКЦИЙ ════════════
 function markSent(){}
 function deleteProject(){}
 function recalculate(){}
 
-// buildPipe оставляем для совместимости с ЛК
 function buildPipe(status){
   const steps = ['draft','clarifying','calculated','sent'];
   const labels = {draft:'Черновик', clarifying:'Уточнение', calculated:'Рассчитано', sent:'Отправлено'};
@@ -1117,9 +1075,8 @@ function buildPipe(status){
   }).join('');
 }
 
-// ═══ РЕДАКТИРОВАНИЕ СУЩЕСТВУЮЩЕЙ ЗАЯВКИ ═════
-let _npEditMode = null;      // id проекта при редактировании
-let _npEditPrefill = null;   // attrs для предзаполнения
+let _npEditMode = null;      
+let _npEditPrefill = null;   
 
 async function editProject(id){
   const p    = projects.find(x=>String(x.id)===String(id));
@@ -1128,24 +1085,24 @@ async function editProject(id){
   _npEditMode   = id;
   _npEditPrefill = a;
 
-  await openNP(); // сброс формы и загрузка типов
-  // Переключаем режим UI
+  await openNP(); 
+  
   document.querySelector('.np-hdr h3').textContent = '✏️ Редактировать заявку';
   $v('np-save-btn').textContent = 'Сохранить изменения';
 
-  // Простые поля
+  
   npSelPrice(a.price_type||'retail');
   if(a.width_mm)  $v('np-width').value  = a.width_mm;
   if(a.depth_mm)  $v('np-depth').value  = a.depth_mm;
   if(a.quantity)  $v('np-qty').value    = a.quantity;
 
-  // Находим product_type по series через БД, затем выбираем
+  
   if(a.series){
     try{
       const vRes = await sbGet('product_variants?series=eq.'+a.series+'&is_active=eq.true&limit=1&select=product_type_id');
       const ptId = vRes?.[0]?.product_type_id;
       const type = ptId && (_npTypes||[]).find(t=>t.id===ptId);
-      if(type) npSwSelect(type); // запускает npUpdFields, который применит _npEditPrefill
+      if(type) npSwSelect(type); 
     }catch(e){}
   }
 }
@@ -1247,14 +1204,11 @@ function printKP({id,code,created_at,attrs,unit_price,total_price,qty}){
   w.document.close();
 }
 
-
-// ═══ ФОРМА НОВОЙ ЗАЯВКИ ═════════════════════
-// ── DB-driven форма новой заявки ──────────────────────────────
 let npPT='retail', npRes=null, npBomRows=[], npAccData=[], npSelAcc=new Set();
-let _npTypes=null;   // кэш product_types
-let npVariants=[];   // варианты текущего типа
-let npMatsByVariant=new Map(); // variant_id -> Set<material_code>
-let npAllMats=new Map();       // material_code -> {id,code,name_short}
+let _npTypes=null;   
+let npVariants=[];   
+let npMatsByVariant=new Map(); 
+let npAllMats=new Map();       
 
 function $v(id){ return document.getElementById(id); }
 function npNearest(arr,v){ return arr.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?b:a); }
@@ -1263,7 +1217,7 @@ async function openNP(){
   ['np-width','np-depth','np-client-name','np-client-phone',
    'np-client-email','np-deal-title','np-notes']
     .forEach(id=>{ const e=$v(id); if(e) e.value=''; });
-  // Заполняем дропдаун менеджеров из загруженных сделок
+  
   const mgrEl=$v('np-manager');
   if(mgrEl){
     const names = [...new Set(projects.map(p=>p.manager_name).filter(Boolean))].sort();
@@ -1280,16 +1234,16 @@ async function openNP(){
   npSelPrice('retail');
   $v('np-err').className='nf-err'; $v('np-err').textContent='';
   $v('np-width-hint').textContent='';
-  // Скрываем доп.поля пока не выбрана серия
+  
   $v('np-depth-wrap').style.display='none';
   $v('np-mat-wrap').style.display='none';
   $v('np-vib-wrap').style.display='none';
   npReset();
-  // Загружаем типы продуктов из БД (один раз)
+  
   if(!_npTypes){
     _npTypes=await sbGet('product_types?is_active=eq.true&order=name&select=id,code,name,name_short');
   }
-  // Сброс searchable select
+  
   $v('np-series').value='';
   $v('np-series-search').value='';
   $v('np-series-search').placeholder='— выберите позицию —';
@@ -1298,7 +1252,6 @@ async function openNP(){
   $v('np-overlay').classList.add('open');
 }
 
-// ── Searchable select для серии ──────────────────────────
 let _npSwActiveId = null;
 
 function npSwBuildList(filter){
@@ -1388,7 +1341,7 @@ async function npUpdFields(){
   const ptId=$v('np-series').value;
   if(!ptId){ npVariants=[]; return; }
 
-  // Загружаем варианты для выбранного типа
+  
   npVariants=await sbGet(
     'product_variants?product_type_id=eq.'+ptId+'&is_active=eq.true'+
     '&order=width_mm,depth_mm&select=id,code,series,width_mm,depth_mm'
@@ -1400,12 +1353,12 @@ async function npUpdFields(){
     return;
   }
 
-  // Стандартные ширины (подсказка)
+  
   const widths=[...new Set(npVariants.map(v=>v.width_mm))].sort((a,b)=>a-b);
   const wh=$v('np-width-hint');
   if(wh) wh.textContent='Стандарт: '+widths.join(', ')+' мм';
 
-  // Нужна ли глубина?
+  
   const hasDepth=npVariants.some(v=>v.depth_mm);
   if(hasDepth){
     $v('np-depth-wrap').style.display='';
@@ -1414,8 +1367,8 @@ async function npUpdFields(){
     if(dh) dh.textContent='Стандарт: '+depths.join(', ')+' мм';
   }
 
-  // Нужен ли доп. параметр (виброизоляция)?
-  // Определяем: несколько вариантов с одинаковой шириной, где суффикс кода — малое число (< 200)
+  
+  
   const hasExtra=npVariants.some((v,i)=>
     npVariants.some((u,j)=>j!==i&&u.width_mm===v.width_mm&&u.depth_mm===v.depth_mm)
   );
@@ -1431,7 +1384,7 @@ async function npUpdFields(){
     }
   }
 
-  // Загружаем материалы из pricing_rules для всей серии (с variant_id для фильтрации по ширине)
+  
   const vids=npVariants.map(v=>v.id);
   const mats=await sbGet(
     'pricing_rules?variant_id=in.('+vids.join(',')+')&select=variant_id,materials(id,code,name_short)&limit=200'
@@ -1444,8 +1397,8 @@ async function npUpdFields(){
     if(!npAllMats.has(m.code)) npAllMats.set(m.code, m);
   });
   npRefreshMaterials();
-  // Если ширина уже введена — пересчитываем сразу
-  // В режиме редактирования: применяем сохранённый материал и вибро
+  
+  
   if(_npEditPrefill){
     const pf=_npEditPrefill;
     if(pf.material_code) $v('np-mat').value=pf.material_code;
@@ -1464,7 +1417,6 @@ function npReset(){
   npRes=null; npBomRows=[]; npAccData=[]; npSelAcc=new Set();
 }
 
-// Находим ближайший вариант по width/depth/extra из текущих npVariants
 function npGetVariant(){
   if(!npVariants.length) return null;
   const wRaw=parseInt($v('np-width').value)||0;
@@ -1474,7 +1426,7 @@ function npGetVariant(){
   const wh=$v('np-width-hint');
   if(wh && wRaw!==nearW) wh.textContent='Ближайший стандарт: '+nearW+' мм, цена пересчитана';
   let filtered=npVariants.filter(v=>v.width_mm===nearW);
-  // Глубина
+  
   const hasDepth=filtered.some(v=>v.depth_mm);
   if(hasDepth){
     const dRaw=parseInt($v('np-depth').value)||0;
@@ -1484,7 +1436,7 @@ function npGetVariant(){
       filtered=filtered.filter(v=>v.depth_mm===nearD);
     }
   }
-  // Доп. параметр (вибро)
+  
   if(filtered.length>1){
     const vibVal=$v('np-vib')?.value;
     if(vibVal){
@@ -1502,7 +1454,7 @@ function npSheetPieces(w, d){
 }
 
 function npGetPriceAdjust(variant, mat, base){
-  // Возвращает {unit, note} для нестандартного размера
+  
   const wRaw=parseInt($v('np-width').value)||0;
   const dRaw=$v('np-depth')?.value ? parseInt($v('np-depth').value)||0 : 0;
   const stdW=variant.width_mm||0;
@@ -1512,7 +1464,7 @@ function npGetPriceAdjust(variant, mat, base){
 
   const cW=wRaw||stdW, cD=dRaw||stdD;
   if(mat==='PLS'||mat==='PLS_LAB'){
-    const SHEET_PRICE=70000; // 1 лист ПЛС/ПЛС-ЛАБ = 70 000 ₽
+    const SHEET_PRICE=70000; 
     const pStd=Math.max(npSheetPieces(stdW,stdD||cD),1);
     const pCust=Math.max(npSheetPieces(cW,cD||stdD),1);
     const delta=Math.round(SHEET_PRICE/pCust - SHEET_PRICE/pStd);
@@ -1530,7 +1482,6 @@ function npGetPriceAdjust(variant, mat, base){
 
 function npErr(msg){ const e=$v('np-err'); e.textContent=msg; e.className='nf-err on'; }
 
-// Обновляет дропдаун материалов под выбранный вариант (ширина/глубина)
 function npRefreshMaterials(){
   const variant=npGetVariant();
   const available=variant ? npMatsByVariant.get(variant.id) : null;
@@ -1554,10 +1505,8 @@ function npRefreshMaterials(){
   }
 }
 
-// ── Динамический пересчёт ─────────────────────────────────
 let _npDeb = null;
 
-// Вызывается при вводе ширины/глубины — дебаунс 500мс
 function npAutoCalc(){
   clearTimeout(_npDeb);
   _npDeb = setTimeout(()=>{
@@ -1567,20 +1516,17 @@ function npAutoCalc(){
   }, 500);
 }
 
-// Вызывается при смене материала — мгновенно
 function npAutoCalcNow(){
   clearTimeout(_npDeb);
   const variant=npGetVariant(), mat=$v('np-mat').value;
   if(variant && mat) npCalc(); else npReset();
 }
 
-// Вызывается при смене виброизоляции — обновляем материалы и пересчитываем
 function npVibChanged(){
   npRefreshMaterials();
   npAutoCalcNow();
 }
 
-// Изменение кол-ва — только обновляем цену из кэша, BOM не перегружаем
 function npQtyChange(){
   if(!npRes?._unit) return;
   npAccRender();
@@ -1610,7 +1556,7 @@ async function npCalc(fromBtn=false){
     const qty=parseInt($v('np-qty').value)||1;
     const base=npPT==='wholesale'?+npRes.price_wholesale:+npRes.price_retail;
     const {unit, note}=npGetPriceAdjust(variant, mat, base);
-    // Геометрический scale — только для BOM (масштабирование количества материалов)
+    
     const wRaw=parseInt($v('np-width').value)||0;
     const dRaw=$v('np-depth')?.value?parseInt($v('np-depth').value)||0:0;
     const stdW=variant.width_mm||0, stdD=variant.depth_mm||0;
@@ -1619,7 +1565,7 @@ async function npCalc(fromBtn=false){
     if(dRaw&&stdD) bomScale*=dRaw/stdD;
     const priceScale=base?unit/base:1;
     npRes._unit=unit; npRes._scale=priceScale; npRes._note=note||null;
-    // Показываем цену
+    
     $v('np-price-val').textContent=fmt(unit*qty)+' ₽';
     $v('np-price-meta').textContent=
       fmt(unit)+' ₽/шт × '+qty+' шт · '+(npPT==='wholesale'?'Оптовая':'Розничная')+
@@ -1627,13 +1573,12 @@ async function npCalc(fromBtn=false){
     $v('np-price-card').style.display='block';
     $v('np-idle-hint').style.display='none';
     $v('np-save-btn').disabled=false;
-    // Загружаем матрицу с геометрическим scale (для количества материалов)
+    
     npLoadMatrix(npRes.variant_id, npRes.material_id, bomScale);
   }catch(e){ npErr('Ошибка: '+e.message); }
   finally{ if(fromBtn){ btn.disabled=false; btn.textContent='Обновить расчёт'; } }
 }
 
-// Единицы, которые масштабируются пропорционально ширине
 const SCALE_UNITS = ['п.м','м.п','кв.м','м.кв','кг','м.','л.','г.','пог'];
 function applyScale(qty, unit, scale){
   if(scale===1) return qty;
@@ -1642,11 +1587,11 @@ function applyScale(qty, unit, scale){
 }
 
 async function npLoadMatrix(vid, mid, scale){
-  // BOM
+  
   try{
     const rows=await rpc('get_bom',{p_variant_id:vid,p_material_id:mid});
     if(rows?.length){
-      // Агрегируем дубли: одинаковые компоненты в одной категории суммируем
+      
       const agg=new Map();
       rows.forEach(r=>{
         const key=(r.category||'')+'||'+(r.component_name||'');
@@ -1667,12 +1612,12 @@ async function npLoadMatrix(vid, mid, scale){
       npMxRender();
       $v('np-mx-block').style.display='';
     } else {
-      // Нет BOM для этого материала — очищаем таблицу
+      
       npBomRows=[];
       $v('np-mx-block').style.display='none';
     }
   }catch(e){ console.warn('BOM err',e); }
-  // Допы
+  
   try{
     npAccData=[]; npSelAcc=new Set();
     const rows=await sbGet(
@@ -1723,7 +1668,7 @@ function npMxRecalc(){
 
 function npAccRender(){
   const pf=npPT==='wholesale'?'price_wholesale':'price_retail';
-  // Группируем по group_name
+  
   const groups=new Map();
   npAccData.forEach(a=>{
     const g=a.group_name||'Комплектующие';
@@ -1742,7 +1687,7 @@ function npAccRender(){
   $v('np-acc-list').innerHTML=html;
   const accTot=npAccData.filter(a=>npSelAcc.has(a.id)).reduce((s,a)=>s+(a[pf]||a.price_retail||0),0);
   $v('np-acc-total').textContent=accTot?'Допы: +'+fmt(accTot)+' ₽':'';
-  // Обновляем главную цену с учётом допов
+  
   if(npRes?._unit!=null){
     const qty=parseInt($v('np-qty').value)||1;
     const unit=npRes._unit;
@@ -1773,7 +1718,7 @@ async function npSave(){
   const selAcc=npAccData.filter(a=>npSelAcc.has(a.id));
   const accTot=selAcc.reduce((s,a)=>s+(a[pf]||a.price_retail||0),0);
   const managerName=$v('np-manager').value.trim()||localStorage.getItem('mgr_name')||'Менеджер';
-  // Сохраняем имя менеджера для следующего раза
+  
   if(managerName&&managerName!=='Менеджер') localStorage.setItem('mgr_name', managerName);
 
   const attrs={series:variant?.series||'',width_mm:w,material_code:mat,quantity:qty,price_type:npPT};
@@ -1781,7 +1726,7 @@ async function npSave(){
   if(vib) attrs.vibration_class=vib;
   if(selAcc.length) attrs.accessories=selAcc.map(a=>({id:a.id,name:a.name,price:a[pf]||a.price_retail}));
 
-  // Код варианта для Битрикс (variant_code)
+  
   let variant_code=null;
   if(variant?.series&&w){
     if(d&&vib) variant_code=variant.series+'-'+w+'x'+d+'-'+vib;
@@ -1789,7 +1734,7 @@ async function npSave(){
     else        variant_code=variant.series+'-'+w;
   }
 
-  // Название товара
+  
   const variant_name=npRes.variant_name||variant?.series||'';
   const total_price=(npRes._unit+accTot)*qty;
   const code='М-'+Date.now().toString(36).toUpperCase().slice(-6);
@@ -1812,7 +1757,7 @@ async function npSave(){
     notes:        $v('np-notes').value.trim()||null,
     price_type:   npPT,
   };
-  // Если открыто из кнопки "Добавить товар в сделку" — прикрепляем к существующей
+  
   if(window._attachToDeal) payload.attach_to_deal = window._attachToDeal;
 
   const btn=$v('np-save-btn');
@@ -1828,7 +1773,7 @@ async function npSave(){
       window._attachToDeal=null;
       closeNP();
       await loadProjects(dealSearchQ);
-      // Показываем уведомление с ссылкой на сделку
+      
       if(res.deal_id){
         const url='https://cz-mebel.bitrix24.ru/crm/deal/details/'+res.deal_id+'/';
         if(confirm('✅ Сделка #'+res.deal_id+' создана в Битрикс24!\nОткрыть сделку?')) window.open(url,'_blank');
@@ -1842,11 +1787,9 @@ async function npSave(){
   }
 }
 
-// ═══ INIT ═══════════════════════════════════
 loadProjects();
 if(lkPhone) lkInit();
 
-// ═══ CHAT MODAL ════════════════════════════
 let cwId = null, cwPoll = null;
 
 async function openChat(id){
