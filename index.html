@@ -1106,6 +1106,9 @@ function openNPforDeal(dealId){
   window._attachToDeal = dealId;
   openNP();
   document.querySelector('.np-hdr h3').textContent = '➕ Добавить товар в сделку #'+dealId;
+  // Переименовываем кнопки в режиме "добавить к существующей сделке"
+  const saveBtn=$v('np-save-btn'); if(saveBtn) saveBtn.textContent='Добавить в сделку';
+  const kpBtn=$v('np-kp-btn'); if(kpBtn) kpBtn.textContent='Сформировать КП';
   const deal = projects.find(x=>String(x.id)===String(dealId));
   if(deal){
     const mgrEl=$v('np-manager');
@@ -1888,20 +1891,76 @@ async function npSaveKP(){
   if(!npRes && !npCart.length) return;
   const btn=$v('np-kp-btn');
   btn.disabled=true; btn.textContent='Формирование КП…';
+
   const items = npCart.length > 0 ? [...npCart] : [npBuildPayload()];
-  let dealId=null;
+  const first = items[0];
+
+  // Обогащаем каждый item характеристиками и фото (как в npSave)
+  const SB_URL = 'https://uzijscrcqmtpkvyiewok.supabase.co/rest/v1';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6aWpzY3JjcW10cGt2eWlld29rIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI2NDUxNiwiZXhwIjoyMDg5ODQwNTE2fQ.53FP7qfAO4q5r22i5SKORqWCw6fSOqXW_vZGXxmYoMA';
+  const sbHeaders = {'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY};
+
+  async function fetchVD(code, attrs){
+    const series=attrs?.series||'', w=attrs?.width_mm, d=attrs?.depth_mm;
+    const urls=[];
+    if(code) urls.push(SB_URL+'/product_variants?select=characteristics,image_url&code=eq.'+encodeURIComponent(code)+'&limit=1');
+    if(series&&w&&d) urls.push(SB_URL+'/product_variants?select=characteristics,image_url&series=eq.'+encodeURIComponent(series)+'&width_mm=eq.'+w+'&depth_mm=eq.'+d+'&limit=1');
+    if(series) urls.push(SB_URL+'/product_variants?select=characteristics,image_url&series=eq.'+encodeURIComponent(series)+'&characteristics=not.is.null&limit=1');
+    for(const u of urls){
+      try{
+        const r=await fetch(u,{headers:sbHeaders});
+        const rows=await r.json();
+        if(rows&&rows[0]&&(rows[0].characteristics||rows[0].image_url)) return rows[0];
+      }catch(e){}
+    }
+    return {characteristics:'',image_url:''};
+  }
+
+  async function fetchImg(url){
+    if(!url) return '';
+    try{
+      const p='https://n8n-grupparosta.chickenkiller.com/webhook/img-proxy?url='+encodeURIComponent(url);
+      const r=await fetch(p);
+      if(!r.ok) return '';
+      const t=await r.text();
+      return t.startsWith('data:')?t:'';
+    }catch(e){return '';}
+  }
+
+  btn.textContent='Загрузка данных…';
+  const enriched=await Promise.all(items.map(async p=>{
+    const vd=await fetchVD(p.variant_code,p.attrs);
+    const img_b64=await fetchImg(vd.image_url||'');
+    return {
+      variant_code:p.variant_code, material_code:p.material_code, variant_name:p.variant_name,
+      qty:p.qty, unit_price:p.unit_price, total_price:p.total_price, attrs:p.attrs,
+      characteristics:vd.characteristics||'', image_url:vd.image_url||'', image_b64:img_b64
+    };
+  }));
+
+  const payload={
+    client_name:first.client_name, manager_name:first.manager_name,
+    deal_title:first.deal_title, price_type:first.price_type,
+    items:enriched
+  };
+
   try{
-    for(let i=0;i<items.length;i++){
-      const payload={...items[i], kp_only:true};
-      if(dealId) payload.attach_to_deal=dealId;
-      btn.textContent=`КП ${i+1}/${items.length}…`;
-      const r=await fetch(N8N_BASE+'/kp-from-site',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      const res=await r.json();
-      if(!res.ok) throw new Error(JSON.stringify(res));
-      if(!dealId && res.deal_id) dealId=res.deal_id;
-      if(i===items.length-1 && res.pdf_url){
-        window.open(res.pdf_url,'_blank');
-      }
+    btn.textContent='Генерация PDF…';
+    const r=await fetch('https://n8n-grupparosta.chickenkiller.com/webhook/kp-preview',{
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    });
+    const res=await r.json();
+    if(!res.ok||!res.pdf_base64) throw new Error('PDF не сформировался');
+    // Открываем PDF в новой вкладке через data URI
+    const pdfUrl='data:application/pdf;base64,'+res.pdf_base64;
+    const w=window.open('');
+    if(w){
+      w.document.title=res.filename||'КП.pdf';
+      w.document.body.innerHTML='<iframe src="'+pdfUrl+'" style="position:fixed;inset:0;width:100%;height:100%;border:0"></iframe>';
+    } else {
+      // popup blocked → скачивание
+      const a=document.createElement('a');
+      a.href=pdfUrl; a.download=res.filename||'КП.pdf'; a.click();
     }
     btn.disabled=false; btn.textContent='Сформировать КП';
   }catch(e){
