@@ -1969,12 +1969,19 @@ async function npSaveKP(){
   }
 }
 
+window._npSaveInFlight = window._npSaveInFlight || false;
 async function npSave(){
   if(_npEditMode){ await npSaveEdit(); return; }
   if(!npRes && !npCart.length) return;
+  if(window._npSaveInFlight){ npErr('Запрос уже отправлен, ждите…'); return; }
+  window._npSaveInFlight = true;
 
   const btn=$v('np-save-btn');
+  const kpBtn=$v('np-kp-btn');
+  const addBtn=$v('np-add-btn');
   btn.disabled=true; btn.textContent='Создание сделки…';
+  if(kpBtn) kpBtn.disabled=true;
+  if(addBtn) addBtn.disabled=true;
 
   const items = npCart.length > 0 ? [...npCart] : [npBuildPayload()];
 
@@ -2054,9 +2061,28 @@ async function npSave(){
     items:          enrichedItems
   };
 
+  // Идемпотентный request_id (сервер может дедуплицировать)
+  payload.request_id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : ('req-'+Date.now()+'-'+Math.random().toString(36).slice(2,10));
+
+  async function fetchWithRetry(url, opts, tries=3, perTryMs=120000){
+    let lastErr;
+    for(let i=0;i<tries;i++){
+      const ctrl = new AbortController();
+      const tm = setTimeout(()=>ctrl.abort(), perTryMs);
+      try{
+        const r = await fetch(url, {...opts, signal: ctrl.signal});
+        clearTimeout(tm);
+        if(!r.ok && r.status >= 500){ lastErr=new Error('HTTP '+r.status); }
+        else return r;
+      }catch(e){ clearTimeout(tm); lastErr=e; }
+      if(i<tries-1){ btn.textContent='Повтор '+(i+2)+'/'+tries+'…'; await new Promise(rs=>setTimeout(rs, 2000*(i+1))); }
+    }
+    throw lastErr || new Error('fetch failed');
+  }
+
   try{
     btn.textContent='Отправка…';
-    const r=await fetch(N8N_BASE+'/kp-from-site',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const r=await fetchWithRetry(N8N_BASE+'/kp-from-site',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     const res=await r.json();
     if(!res.ok) throw new Error(JSON.stringify(res));
     npCart=[];
@@ -2068,8 +2094,12 @@ async function npSave(){
       if(confirm('✅ Сделка #'+res.deal_id+' создана в Битрикс24!\nОткрыть сделку?')) window.open(url,'_blank');
     }
   }catch(e){
-    npErr('Ошибка: '+e.message);
+    npErr('Ошибка: '+e.message+'. Если сделка всё-таки создалась — обновите список через несколько секунд.');
     btn.disabled=false; btn.textContent='Создать заявку';
+    if(kpBtn) kpBtn.disabled=false;
+    if(addBtn) addBtn.disabled=false;
+  } finally {
+    window._npSaveInFlight = false;
   }
 }
 
