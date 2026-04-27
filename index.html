@@ -535,6 +535,43 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
           <option value="C2:FINAL_INVOICE">Готово к отправке</option>
         </select>
       </div>
+      <hr class="nf-sep">
+      <div class="nf-label" style="margin-bottom:6px;color:#1e2f3d;font-weight:700">Параметры КП</div>
+      <div class="nf-row2">
+        <div class="nf-group">
+          <div class="nf-label">Срок изготовления (дней)</div>
+          <input type="text" id="np-kp-term" class="nf-inp" value="70">
+        </div>
+        <div class="nf-group">
+          <div class="nf-label">Гарантийный срок</div>
+          <input type="text" id="np-kp-warranty" class="nf-inp" value="1,5 года">
+        </div>
+      </div>
+      <div class="nf-row2">
+        <div class="nf-group">
+          <div class="nf-label">Срок службы</div>
+          <input type="text" id="np-kp-lifetime" class="nf-inp" value="10 лет">
+        </div>
+        <div class="nf-group">
+          <div class="nf-label">Условия оплаты</div>
+          <input type="text" id="np-kp-payment" class="nf-inp" value="100% предоплата для торгующих организаций, постоплата для бюджетных организаций">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div class="nf-group">
+          <div class="nf-label">Доставка</div>
+          <input type="text" id="np-kp-delivery" class="nf-inp" value="Не предусмотрена" placeholder="Не предусмотрена / 5 000 ₽ / ...">
+        </div>
+        <div class="nf-group">
+          <div class="nf-label">Разгрузка</div>
+          <input type="text" id="np-kp-unloading" class="nf-inp" value="Не предусмотрена">
+        </div>
+        <div class="nf-group">
+          <div class="nf-label">Сборка</div>
+          <input type="text" id="np-kp-assembly" class="nf-inp" value="Не предусмотрена">
+        </div>
+      </div>
+      <hr class="nf-sep">
       <div class="nf-group">
         <div class="nf-label">Примечание</div>
         <textarea id="np-notes" class="nf-inp" rows="2" style="resize:none" placeholder="Дополнительно..."></textarea>
@@ -605,6 +642,7 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
       <button class="btn" id="np-calc-btn" onclick="npCalc(true)" style="flex:1">Обновить расчёт</button>
       <button class="btn" id="np-add-btn" onclick="npAddToCart()" style="flex:1" disabled>+ В корзину</button>
       <button class="btn" id="np-kp-btn" onclick="npSaveKP()" style="flex:1" disabled>Сформировать КП</button>
+      <button class="btn" id="np-mail-btn" onclick="npSendKPEmail()" style="flex:1" disabled>📧 Отправить клиенту</button>
       <button class="btn primary" id="np-save-btn" onclick="npSave()" style="flex:1" disabled>Создать заявку</button>
     </div>
   </div>
@@ -1523,11 +1561,10 @@ function npReset(){
   $v('np-acc-block').style.display='none';
   // "+ В корзину" — только когда в форме валидный расчёт
   $v('np-add-btn').disabled=true;
-  // Создание сделки/КП доступно если в корзине есть позиции
-  // (они отправятся, форма игнорируется). Если корзина пуста — кнопки тоже
-  // не блокируем: при клике покажем подсветку незаполненных полей.
+  // Создание сделки/КП/email — всегда активно, при клике сами проверят данные
   $v('np-save-btn').disabled=false;
   $v('np-kp-btn').disabled=false;
+  const _mb=$v('np-mail-btn'); if(_mb) _mb.disabled=false;
   npRes=null; npBomRows=[]; npAccData=[]; npSelAcc=new Set();
 }
 
@@ -1906,10 +1943,10 @@ function npAddToCart(){
 function npRenderCart(){
   const cart=$v('np-cart');
   const list=$v('np-cart-list');
-  // кнопки сделки и КП всегда активны: при клике сами решат что делать
-  // (взять корзину или потребовать заполнить форму с подсветкой)
+  // кнопки сделки/КП/email всегда активны: при клике сами решат что делать
   $v('np-kp-btn').disabled=false;
   $v('np-save-btn').disabled=false;
+  const mb=$v('np-mail-btn'); if(mb) mb.disabled=false;
   if(!npCart.length){ cart.style.display='none'; return; }
   cart.style.display='block';
   list.innerHTML=npCart.map((p,i)=>
@@ -1998,9 +2035,20 @@ async function npSaveKP(){
     };
   }));
 
+  const kpFields={
+    term:      ($v('np-kp-term')?.value || '70').trim(),
+    warranty:  ($v('np-kp-warranty')?.value || '1,5 года').trim(),
+    lifetime:  ($v('np-kp-lifetime')?.value || '10 лет').trim(),
+    payment:   ($v('np-kp-payment')?.value || '100% предоплата для торгующих организаций, постоплата для бюджетных организаций').trim(),
+    delivery:  ($v('np-kp-delivery')?.value || 'Не предусмотрена').trim(),
+    unloading: ($v('np-kp-unloading')?.value || 'Не предусмотрена').trim(),
+    assembly:  ($v('np-kp-assembly')?.value || 'Не предусмотрена').trim()
+  };
   const payload={
-    client_name:first.client_name, manager_name:first.manager_name,
+    client_name:first.client_name, client_email:first.client_email, client_phone:first.client_phone,
+    manager_name:first.manager_name,
     deal_title:first.deal_title, price_type:first.price_type,
+    kp_fields:kpFields,
     items:enriched
   };
 
@@ -2026,6 +2074,104 @@ async function npSaveKP(){
   }catch(e){
     npErr('Ошибка: '+e.message);
     btn.disabled=false; btn.textContent='Сформировать КП';
+  }
+}
+
+async function npSendKPEmail(){
+  // Та же сборка items, что и в npSaveKP
+  const formValid = npRes && npValidateForm().ok;
+  let items;
+  if(npCart.length > 0){
+    items = [...npCart];
+    if(formValid){
+      const formItem = npBuildPayload();
+      const dup = items.some(c => c.variant_code===formItem.variant_code && c.material_code===formItem.material_code && c.qty===formItem.qty);
+      if(!dup) items.push(formItem);
+    } else { npClearBad(); }
+  } else {
+    if(!formValid){
+      const v = npValidateForm();
+      npErr('Заполните: '+v.missing.join(', ')+' — или добавьте позицию в корзину.');
+      if(v.firstEl) v.firstEl.focus();
+      return;
+    }
+    items = [npBuildPayload()];
+  }
+  const first = items[0];
+  const email = ($v('np-client-email').value || first.client_email || '').trim();
+  if(!email || !/^\S+@\S+\.\S+$/.test(email)){
+    const el = $v('np-client-email');
+    if(el){ el.classList.add('nf-bad'); el.focus(); }
+    npErr('Укажите корректный email клиента, чтобы отправить КП.');
+    return;
+  }
+  if(!confirm('Отправить КП на '+email+'?')) return;
+
+  const btn = $v('np-mail-btn');
+  btn.disabled = true; btn.textContent = 'Отправка…';
+
+  // обогащение items характеристиками + фото (как в npSaveKP — короткая версия)
+  const SB_URL = 'https://uzijscrcqmtpkvyiewok.supabase.co/rest/v1';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6aWpzY3JjcW10cGt2eWlld29rIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI2NDUxNiwiZXhwIjoyMDg5ODQwNTE2fQ.53FP7qfAO4q5r22i5SKORqWCw6fSOqXW_vZGXxmYoMA';
+  const sbHeaders = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+  async function fetchVD(code,attrs){
+    const series=attrs?.series||'',w=attrs?.width_mm,d=attrs?.depth_mm;
+    const urls=[];
+    if(code) urls.push(SB_URL+'/product_variants?select=characteristics,image_url&code=eq.'+encodeURIComponent(code)+'&limit=1');
+    if(series&&w&&d) urls.push(SB_URL+'/product_variants?select=characteristics,image_url&series=eq.'+encodeURIComponent(series)+'&width_mm=eq.'+w+'&depth_mm=eq.'+d+'&limit=1');
+    if(series) urls.push(SB_URL+'/product_variants?select=characteristics,image_url&series=eq.'+encodeURIComponent(series)+'&characteristics=not.is.null&limit=1');
+    for(const u of urls){
+      try{ const r=await fetch(u,{headers:sbHeaders}); const rs=await r.json(); if(rs?.[0]?.characteristics||rs?.[0]?.image_url) return rs[0]; }catch(e){}
+    }
+    return {characteristics:'',image_url:''};
+  }
+  async function fetchImg(url){
+    if(!url) return '';
+    try{
+      const p='https://n8n-grupparosta.chickenkiller.com/webhook/img-proxy?url='+encodeURIComponent(url);
+      const r=await fetch(p); if(!r.ok) return '';
+      const t=await r.text(); return t.startsWith('data:')?t:'';
+    }catch(e){ return ''; }
+  }
+  const enriched = await Promise.all(items.map(async p=>{
+    const vd = await fetchVD(p.variant_code, p.attrs);
+    const img_b64 = await fetchImg(vd.image_url || '');
+    return {variant_code:p.variant_code, material_code:p.material_code, variant_name:p.variant_name, qty:p.qty, unit_price:p.unit_price, total_price:p.total_price, attrs:p.attrs, characteristics:vd.characteristics||'', image_url:vd.image_url||'', image_b64:img_b64};
+  }));
+
+  const kpFields = {
+    term:      ($v('np-kp-term')?.value || '70').trim(),
+    warranty:  ($v('np-kp-warranty')?.value || '1,5 года').trim(),
+    lifetime:  ($v('np-kp-lifetime')?.value || '10 лет').trim(),
+    payment:   ($v('np-kp-payment')?.value || '100% предоплата для торгующих организаций, постоплата для бюджетных организаций').trim(),
+    delivery:  ($v('np-kp-delivery')?.value || 'Не предусмотрена').trim(),
+    unloading: ($v('np-kp-unloading')?.value || 'Не предусмотрена').trim(),
+    assembly:  ($v('np-kp-assembly')?.value || 'Не предусмотрена').trim()
+  };
+  const payload = {
+    email_to: email,
+    client_name: first.client_name || '',
+    client_phone: first.client_phone || '',
+    manager_name: first.manager_name || 'Менеджер',
+    deal_title: first.deal_title || '',
+    price_type: first.price_type || 'retail',
+    kp_fields: kpFields,
+    items: enriched
+  };
+  try{
+    const r = await fetch('https://n8n-grupparosta.chickenkiller.com/webhook/kp-send-email', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    });
+    const res = await r.json().catch(()=>({}));
+    if(r.ok && res.ok){
+      alert('✅ КП отправлено на '+email);
+    } else {
+      throw new Error(res.error || ('HTTP '+r.status));
+    }
+  }catch(e){
+    npErr('Не удалось отправить КП: '+e.message+'. Проверьте настройку SMTP в n8n.');
+  }finally{
+    btn.disabled=false; btn.textContent='📧 Отправить клиенту';
   }
 }
 
@@ -2134,6 +2280,15 @@ async function npSave(){
 
   // Берём общие поля из первого товара
   const first = items[0];
+  const kpFields = {
+    term:      ($v('np-kp-term')?.value || '70').trim(),
+    warranty:  ($v('np-kp-warranty')?.value || '1,5 года').trim(),
+    lifetime:  ($v('np-kp-lifetime')?.value || '10 лет').trim(),
+    payment:   ($v('np-kp-payment')?.value || '100% предоплата для торгующих организаций, постоплата для бюджетных организаций').trim(),
+    delivery:  ($v('np-kp-delivery')?.value || 'Не предусмотрена').trim(),
+    unloading: ($v('np-kp-unloading')?.value || 'Не предусмотрена').trim(),
+    assembly:  ($v('np-kp-assembly')?.value || 'Не предусмотрена').trim()
+  };
   const payload = {
     client_name:    first.client_name,
     client_phone:   first.client_phone,
@@ -2145,6 +2300,7 @@ async function npSave(){
     stage_id:       first.stage_id,
     price_type:     first.price_type,
     attach_to_deal: window._attachToDeal || first.attach_to_deal || null,
+    kp_fields:      kpFields,
     items:          enrichedItems
   };
 
