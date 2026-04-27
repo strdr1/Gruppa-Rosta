@@ -1308,7 +1308,7 @@ function printKP({id,code,created_at,attrs,unit_price,total_price,qty}){
   w.document.close();
 }
 
-let npPT='retail', npRes=null, npBomRows=[], npAccData=[], npSelAcc=new Set();
+let npPT='retail', npRes=null, npBomRows=[], npAccData=[], npSelAcc=new Set(), npLoadToken=0;
 let _npTypes=null;
 let npVariants=[];
 let npMatsByVariant=new Map();
@@ -1696,11 +1696,14 @@ function applyScale(qty, unit, scale){
 }
 
 async function npLoadMatrix(vid, mid, scale){
-  
+  const myToken = ++npLoadToken;
+  // immediately clear old matrix while we fetch new one
+  npBomRows=[]; $v('np-mx-block').style.display='none';
+  npAccData=[]; npSelAcc=new Set(); $v('np-acc-block').style.display='none';
   try{
     const rows=await rpc('get_bom',{p_variant_id:vid,p_material_id:mid});
+    if(myToken !== npLoadToken) return;
     if(rows?.length){
-      
       const agg=new Map();
       rows.forEach(r=>{
         const key=(r.category||'')+'||'+(r.component_name||'');
@@ -1720,18 +1723,14 @@ async function npLoadMatrix(vid, mid, scale){
       $v('mx-labor').value='';
       npMxRender();
       $v('np-mx-block').style.display='';
-    } else {
-      
-      npBomRows=[];
-      $v('np-mx-block').style.display='none';
     }
   }catch(e){ console.warn('BOM err',e); }
-  
+
   try{
-    npAccData=[]; npSelAcc=new Set();
     const rows=await sbGet(
       'accessory_variants?variant_id=eq.'+vid+'&select=accessories(id,name,price_retail,price_wholesale,group_name)&limit=60'
     );
+    if(myToken !== npLoadToken) return;
     const seen=new Set();
     npAccData=rows
       .filter(r=>r.accessories?.price_retail&&!seen.has(r.accessories.id)&&seen.add(r.accessories.id))
@@ -1870,8 +1869,15 @@ function npAddToCart(){
 function npRenderCart(){
   const cart=$v('np-cart');
   const list=$v('np-cart-list');
-  if(!npCart.length){ cart.style.display='none'; $v('np-kp-btn').disabled=!npRes; $v('np-save-btn').disabled=!npRes; return; }
+  if(!npCart.length){
+    cart.style.display='none';
+    $v('np-kp-btn').disabled=!npRes;
+    $v('np-save-btn').disabled=!npRes;
+    return;
+  }
   cart.style.display='block';
+  // если в корзине есть позиции — кнопки сделки/КП всегда активны,
+  // независимо от текущей конфигурации в форме (конфигуратор может быть пуст)
   $v('np-kp-btn').disabled=false;
   $v('np-save-btn').disabled=false;
   list.innerHTML=npCart.map((p,i)=>
@@ -1892,7 +1898,21 @@ async function npSaveKP(){
   const btn=$v('np-kp-btn');
   btn.disabled=true; btn.textContent='Формирование КП…';
 
-  const items = npCart.length > 0 ? [...npCart] : [npBuildPayload()];
+  // Та же логика, что в npSave: при непустой корзине добавляем туда текущий конфигуратор, если он валидный и ещё не в корзине
+  let items;
+  if(npCart.length > 0){
+    items = [...npCart];
+    if(npRes){
+      const formItem = npBuildPayload();
+      const dup = items.some(c =>
+        c.variant_code === formItem.variant_code &&
+        c.material_code === formItem.material_code &&
+        c.qty === formItem.qty);
+      if(!dup) items.push(formItem);
+    }
+  } else {
+    items = [npBuildPayload()];
+  }
   const first = items[0];
 
   // Обогащаем каждый item характеристиками и фото (как в npSave)
@@ -1983,7 +2003,24 @@ async function npSave(){
   if(kpBtn) kpBtn.disabled=true;
   if(addBtn) addBtn.disabled=true;
 
-  const items = npCart.length > 0 ? [...npCart] : [npBuildPayload()];
+  // Состав сделки:
+  // - есть товары в корзине → используем корзину
+  //   (если в форме валидная конфигурация И ещё не в корзине — добавляем её)
+  // - корзина пуста → используем текущую конфигурацию из формы
+  let items;
+  if(npCart.length > 0){
+    items = [...npCart];
+    if(npRes){
+      const formItem = npBuildPayload();
+      const dup = items.some(c =>
+        c.variant_code === formItem.variant_code &&
+        c.material_code === formItem.material_code &&
+        c.qty === formItem.qty);
+      if(!dup) items.push(formItem);
+    }
+  } else {
+    items = [npBuildPayload()];
+  }
 
   // Подтягиваем характеристики и фото из Supabase для каждого товара
   const SB_URL = 'https://uzijscrcqmtpkvyiewok.supabase.co/rest/v1';
