@@ -1926,14 +1926,24 @@ function npCartRemove(i){
 }
 
 async function npSaveKP(){
-  // Та же логика что и в npSave: КП собирается строго по корзине;
-  // если корзина пустая — берём из формы, валидируя её
+  // Та же логика что и в npSave: корзина + полностью валидная форма (если есть)
+  const formValid = npRes && npValidateForm().ok;
   let items;
   if(npCart.length > 0){
     items = [...npCart];
+    if(formValid){
+      const formItem = npBuildPayload();
+      const dup = items.some(c =>
+        c.variant_code === formItem.variant_code &&
+        c.material_code === formItem.material_code &&
+        c.qty === formItem.qty);
+      if(!dup) items.push(formItem);
+    } else {
+      npClearBad();
+    }
   } else {
-    const v = npValidateForm();
-    if(!v.ok || !npRes){
+    if(!formValid){
+      const v = npValidateForm();
       npErr('Заполните: '+v.missing.join(', ')+' — или добавьте позицию в корзину.');
       if(v.firstEl) v.firstEl.focus();
       return;
@@ -2024,16 +2034,29 @@ async function npSave(){
   if(_npEditMode){ await npSaveEdit(); return; }
   if(window._npSaveInFlight){ npErr('Запрос уже отправлен, ждите…'); return; }
 
-  // Состав сделки определяется ТОЛЬКО корзиной:
-  // - корзина непуста → отправляем содержимое корзины (форма игнорируется,
-  //   даже если в ней что-то набрано — это считается заготовкой следующей позиции)
-  // - корзина пуста → требуется валидная конфигурация в форме (1 позиция)
+  // Состав сделки:
+  // - всегда отправляем корзину (если в ней есть позиции)
+  // - если форма ПОЛНОСТЬЮ валидна (есть npRes и все поля заполнены) → добавляем форму как ещё одну позицию
+  // - если корзина пуста → форма обязательна (показываем подсветку при ошибке)
+  // - если в форме что-то начато но не дозаполнено и корзина непуста → молча игнорируем форму
+  const formValid = npRes && npValidateForm().ok;
   let items;
   if(npCart.length > 0){
     items = [...npCart];
+    if(formValid){
+      const formItem = npBuildPayload();
+      const dup = items.some(c =>
+        c.variant_code === formItem.variant_code &&
+        c.material_code === formItem.material_code &&
+        c.qty === formItem.qty);
+      if(!dup) items.push(formItem);
+    } else {
+      // подсветку не показываем — раз корзина непуста, форма не обязательна
+      npClearBad();
+    }
   } else {
-    const v = npValidateForm();
-    if(!v.ok || !npRes){
+    if(!formValid){
+      const v = npValidateForm();
       npErr('Заполните: '+v.missing.join(', ')+' — или добавьте позицию в корзину.');
       if(v.firstEl) v.firstEl.focus();
       return;
