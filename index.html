@@ -132,6 +132,8 @@ html,body{height:100%;overflow:hidden;background:#f2f4f7;font-family:system-ui,-
 .np-sw-item.np-sw-empty:hover{background:none}
 .nf-err.on{display:block}
 .nf-hint{font-size:10px;color:#9ab0c4;margin-top:2px}
+.nf-bad{border-color:#dc2626 !important;background:#fef0f0 !important;animation:nfshake .35s}
+@keyframes nfshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
 
 .np-price-card{flex-shrink:0;padding:14px 18px;background:#fff;border-bottom:1px solid #edf2f7;display:none}
 .np-price-big{font-size:28px;font-weight:800;color:#1a6f4b;line-height:1}
@@ -1354,6 +1356,7 @@ async function openNP(){
   $v('np-series-search').placeholder='— выберите позицию —';
   $v('np-series-search').readOnly=false;
   npSwBuildList();
+  npRenderCart();
   $v('np-overlay').classList.add('open');
 }
 
@@ -1589,6 +1592,35 @@ function npGetPriceAdjust(variant, mat, base){
 
 function npErr(msg){ const e=$v('np-err'); e.textContent=msg; e.className='nf-err on'; }
 
+function npClearBad(){
+  ['np-series-search','np-width','np-depth','np-mat','np-vib'].forEach(id=>{
+    const el=$v(id); if(el) el.classList.remove('nf-bad');
+  });
+}
+
+// Возвращает {ok, missing:[label], firstEl} — что не хватает в форме чтобы получить валидный конфиг
+function npValidateForm(){
+  npClearBad();
+  const missing=[]; let firstEl=null;
+  function bad(id,label){
+    const el=$v(id); if(el){ el.classList.add('nf-bad'); if(!firstEl) firstEl=el; }
+    missing.push(label);
+  }
+  if(!_npSwActiveId){ bad('np-series-search','серия'); }
+  const w=parseInt($v('np-width').value)||0;
+  if(!w){ bad('np-width','ширина'); }
+  const depthEl=$v('np-depth-wrap');
+  if(depthEl && depthEl.style.display!=='none'){
+    const d=parseInt($v('np-depth').value)||0;
+    if(!d) bad('np-depth','глубина');
+  }
+  const matWrap=$v('np-mat-wrap');
+  if(matWrap && matWrap.style.display!=='none'){
+    if(!$v('np-mat').value) bad('np-mat','материал поверхности');
+  }
+  return {ok:missing.length===0, missing, firstEl};
+}
+
 function npRefreshMaterials(){
   const variant=npGetVariant();
   const available=variant ? npMatsByVariant.get(variant.id) : null;
@@ -1615,6 +1647,7 @@ function npRefreshMaterials(){
 let _npDeb = null;
 
 function npAutoCalc(){
+  npClearBad();
   clearTimeout(_npDeb);
   _npDeb = setTimeout(()=>{
     npRefreshMaterials();
@@ -1869,17 +1902,12 @@ function npAddToCart(){
 function npRenderCart(){
   const cart=$v('np-cart');
   const list=$v('np-cart-list');
-  if(!npCart.length){
-    cart.style.display='none';
-    $v('np-kp-btn').disabled=!npRes;
-    $v('np-save-btn').disabled=!npRes;
-    return;
-  }
-  cart.style.display='block';
-  // если в корзине есть позиции — кнопки сделки/КП всегда активны,
-  // независимо от текущей конфигурации в форме (конфигуратор может быть пуст)
+  // кнопки сделки и КП всегда активны: при клике сами решат что делать
+  // (взять корзину или потребовать заполнить форму с подсветкой)
   $v('np-kp-btn').disabled=false;
   $v('np-save-btn').disabled=false;
+  if(!npCart.length){ cart.style.display='none'; return; }
+  cart.style.display='block';
   list.innerHTML=npCart.map((p,i)=>
     `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #e0f2fe">
       <span>${esc(p.variant_name)} × ${p.qty} шт. — ${fmt(p.total_price)} руб.</span>
@@ -1894,25 +1922,23 @@ function npCartRemove(i){
 }
 
 async function npSaveKP(){
-  if(!npRes && !npCart.length) return;
-  const btn=$v('np-kp-btn');
-  btn.disabled=true; btn.textContent='Формирование КП…';
-
-  // Та же логика, что в npSave: при непустой корзине добавляем туда текущий конфигуратор, если он валидный и ещё не в корзине
+  // Та же логика что и в npSave: КП собирается строго по корзине;
+  // если корзина пустая — берём из формы, валидируя её
   let items;
   if(npCart.length > 0){
     items = [...npCart];
-    if(npRes){
-      const formItem = npBuildPayload();
-      const dup = items.some(c =>
-        c.variant_code === formItem.variant_code &&
-        c.material_code === formItem.material_code &&
-        c.qty === formItem.qty);
-      if(!dup) items.push(formItem);
-    }
   } else {
+    const v = npValidateForm();
+    if(!v.ok || !npRes){
+      npErr('Заполните: '+v.missing.join(', ')+' — или добавьте позицию в корзину.');
+      if(v.firstEl) v.firstEl.focus();
+      return;
+    }
     items = [npBuildPayload()];
   }
+
+  const btn=$v('np-kp-btn');
+  btn.disabled=true; btn.textContent='Формирование КП…';
   const first = items[0];
 
   // Обогащаем каждый item характеристиками и фото (как в npSave)
@@ -1992,35 +2018,32 @@ async function npSaveKP(){
 window._npSaveInFlight = window._npSaveInFlight || false;
 async function npSave(){
   if(_npEditMode){ await npSaveEdit(); return; }
-  if(!npRes && !npCart.length) return;
   if(window._npSaveInFlight){ npErr('Запрос уже отправлен, ждите…'); return; }
-  window._npSaveInFlight = true;
 
+  // Состав сделки определяется ТОЛЬКО корзиной:
+  // - корзина непуста → отправляем содержимое корзины (форма игнорируется,
+  //   даже если в ней что-то набрано — это считается заготовкой следующей позиции)
+  // - корзина пуста → требуется валидная конфигурация в форме (1 позиция)
+  let items;
+  if(npCart.length > 0){
+    items = [...npCart];
+  } else {
+    const v = npValidateForm();
+    if(!v.ok || !npRes){
+      npErr('Заполните: '+v.missing.join(', ')+' — или добавьте позицию в корзину.');
+      if(v.firstEl) v.firstEl.focus();
+      return;
+    }
+    items = [npBuildPayload()];
+  }
+
+  window._npSaveInFlight = true;
   const btn=$v('np-save-btn');
   const kpBtn=$v('np-kp-btn');
   const addBtn=$v('np-add-btn');
   btn.disabled=true; btn.textContent='Создание сделки…';
   if(kpBtn) kpBtn.disabled=true;
   if(addBtn) addBtn.disabled=true;
-
-  // Состав сделки:
-  // - есть товары в корзине → используем корзину
-  //   (если в форме валидная конфигурация И ещё не в корзине — добавляем её)
-  // - корзина пуста → используем текущую конфигурацию из формы
-  let items;
-  if(npCart.length > 0){
-    items = [...npCart];
-    if(npRes){
-      const formItem = npBuildPayload();
-      const dup = items.some(c =>
-        c.variant_code === formItem.variant_code &&
-        c.material_code === formItem.material_code &&
-        c.qty === formItem.qty);
-      if(!dup) items.push(formItem);
-    }
-  } else {
-    items = [npBuildPayload()];
-  }
 
   // Подтягиваем характеристики и фото из Supabase для каждого товара
   const SB_URL = 'https://uzijscrcqmtpkvyiewok.supabase.co/rest/v1';
