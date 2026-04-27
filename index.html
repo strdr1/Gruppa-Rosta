@@ -1521,9 +1521,13 @@ function npReset(){
   $v('np-idle-hint').innerHTML='Выберите серию и ширину —<br>цена и матрица обновятся автоматически';
   $v('np-mx-block').style.display='none';
   $v('np-acc-block').style.display='none';
-  $v('np-save-btn').disabled=true;
+  // "+ В корзину" — только когда в форме валидный расчёт
   $v('np-add-btn').disabled=true;
-  $v('np-kp-btn').disabled=true;
+  // Создание сделки/КП доступно если в корзине есть позиции
+  // (они отправятся, форма игнорируется). Если корзина пуста — кнопки тоже
+  // не блокируем: при клике покажем подсветку незаполненных полей.
+  $v('np-save-btn').disabled=false;
+  $v('np-kp-btn').disabled=false;
   npRes=null; npBomRows=[]; npAccData=[]; npSelAcc=new Set();
 }
 
